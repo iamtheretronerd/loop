@@ -1,0 +1,661 @@
+//storage.js
+export const apiSettings = {
+    STORAGE_KEY: 'loop-api-instances-v2',
+    INSTANCES_URL: 'instances.json',
+    SPEED_TEST_CACHE_KEY: 'loop-instance-speeds',
+    SPEED_TEST_CACHE_DURATION: 1000 * 60 * 60,
+    defaultInstances: { api: [], streaming: [] },
+    instancesLoaded: false,
+
+    async loadInstancesFromGitHub() {
+        if (this.instancesLoaded) {
+            return this.defaultInstances;
+        }
+
+        // Default to empty to force manual setup
+        this.defaultInstances = { api: [], streaming: [] };
+        this.instancesLoaded = true;
+        return this.defaultInstances;
+    },
+
+    async speedTestInstance(url, type = 'api') {
+        let testUrl;
+        // API instances might not support /track/ endpoint (which checks for streamability)
+        // So we test API instances with a lightweight metadata endpoint
+        if (type === 'streaming') {
+            testUrl = url.endsWith('/')
+                ? `${url}track/?id=204567804&quality=HIGH`
+                : `${url}/track/?id=204567804&quality=HIGH`;
+        } else {
+            testUrl = url.endsWith('/')
+                ? `${url}artist/?id=3532302` // Daft Punk
+                : `${url}/artist/?id=3532302`;
+        }
+
+        const startTime = performance.now();
+
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
+
+            const response = await fetch(testUrl, {
+                signal: controller.signal,
+                cache: 'no-store',
+            });
+
+            clearTimeout(timeout);
+
+            if (!response.ok) {
+                return { url, type, speed: Infinity, error: `HTTP ${response.status}` };
+            }
+
+            const endTime = performance.now();
+            const speed = endTime - startTime;
+
+            return { url, type, speed, error: null };
+        } catch (error) {
+            return { url, type, speed: Infinity, error: error.message };
+        }
+    },
+
+    getCachedSpeedTests() {
+        try {
+            const cached = localStorage.getItem(this.SPEED_TEST_CACHE_KEY);
+            if (!cached) return { speeds: {}, timestamp: Date.now() };
+
+            const data = JSON.parse(cached);
+
+            if (Date.now() - data.timestamp > this.SPEED_TEST_CACHE_DURATION) {
+                return { speeds: {}, timestamp: Date.now() };
+            }
+
+            return data;
+        } catch {
+            return { speeds: {}, timestamp: Date.now() };
+        }
+    },
+
+    updateSpeedCache(newResults) {
+        const currentCache = this.getCachedSpeedTests();
+
+        newResults.forEach((r) => {
+            // Use distinct keys for streaming tests to avoid overwriting API tests for same URL
+            // API tests use raw URL as key (for backward compatibility with UI)
+            const key = r.type === 'streaming' ? `${r.url}#streaming` : r.url;
+            currentCache.speeds[key] = { speed: r.speed, error: r.error };
+        });
+
+        currentCache.timestamp = Date.now();
+
+        try {
+            localStorage.setItem(this.SPEED_TEST_CACHE_KEY, JSON.stringify(currentCache));
+        } catch {
+            console.warn('[SpeedTest] Failed to cache results');
+        }
+
+        return currentCache;
+    },
+
+    async testSpecificUrls(urls, type) {
+        if (!urls || urls.length === 0) return [];
+        console.log(`[SpeedTest] Testing ${urls.length} instances for ${type}...`);
+
+        const results = await Promise.all(urls.map((url) => this.speedTestInstance(url, type)));
+
+        const validResults = results.filter((r) => r.speed !== Infinity);
+        console.log(
+            `[SpeedTest] ${type} Results:`,
+            validResults.map((r) => `${r.url}: ${r.speed.toFixed(0)}ms`)
+        );
+
+        return results;
+    },
+
+    async getInstances(type = 'api') {
+        let instancesObj;
+
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        if (stored) {
+            instancesObj = JSON.parse(stored);
+
+            // love it when local storage doesnt update
+            if (instancesObj?.api?.length === 2) {
+                const hasBinimum = instancesObj.api.some((url) => url.includes('tidal-api.binimum.org'));
+                const hasSamidy = instancesObj.api.some((url) => url.includes('monochrome-api.samidy.com'));
+
+                if (hasBinimum && hasSamidy) {
+                    localStorage.removeItem(this.STORAGE_KEY);
+                    instancesObj = null;
+                }
+            }
+        }
+
+        if (!instancesObj) {
+            instancesObj = await this.loadInstancesFromGitHub();
+        }
+
+        const targetUrls = instancesObj[type] || instancesObj.api || [];
+        if (targetUrls.length === 0) return [];
+
+        const speedCache = this.getCachedSpeedTests();
+        // Construct cache key based on type
+        const getCacheKey = (u) => (type === 'streaming' ? `${u}#streaming` : u);
+
+        const urlsToTest = targetUrls.filter((url) => !speedCache.speeds[getCacheKey(url)]);
+
+        if (urlsToTest.length > 0) {
+            const results = await this.testSpecificUrls(urlsToTest, type);
+            this.updateSpeedCache(results);
+            Object.assign(speedCache, this.getCachedSpeedTests());
+        }
+
+        const sortList = (list) => {
+            return [...list].sort((a, b) => {
+                const speedA = speedCache.speeds[getCacheKey(a)]?.speed ?? Infinity;
+                const speedB = speedCache.speeds[getCacheKey(b)]?.speed ?? Infinity;
+                return speedA - speedB;
+            });
+        };
+
+        const sortedList = sortList(targetUrls);
+
+        // Persist the sorted order
+        instancesObj[type] = sortedList;
+        this.saveInstances(instancesObj);
+
+        return sortedList;
+    },
+
+    async refreshSpeedTests() {
+        const instances = await this.loadInstancesFromGitHub();
+        const promises = [];
+
+        if (instances.api && instances.api.length) {
+            promises.push(this.testSpecificUrls(instances.api, 'api'));
+        }
+
+        if (instances.streaming && instances.streaming.length) {
+            promises.push(this.testSpecificUrls(instances.streaming, 'streaming'));
+        }
+
+        const resultsArray = await Promise.all(promises);
+        const allResults = resultsArray.flat();
+
+        this.updateSpeedCache(allResults);
+
+        // Return API instances for the UI to render (default view)
+        return this.getInstances('api');
+    },
+    saveInstances(instances, type) {
+        if (type) {
+            try {
+                const stored = localStorage.getItem(this.STORAGE_KEY);
+                let fullObj = stored ? JSON.parse(stored) : { api: [], streaming: [] };
+                fullObj[type] = instances;
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(fullObj));
+            } catch (e) {
+                console.error('Failed to save instances:', e);
+            }
+        } else {
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(instances));
+        }
+    },
+};
+export const recentActivityManager = {
+    STORAGE_KEY: 'loop-recent-activity',
+    LIMIT: 10,
+
+    _get() {
+        try {
+            const data = localStorage.getItem(this.STORAGE_KEY);
+            const parsed = data ? JSON.parse(data) : { artists: [], albums: [], playlists: [], mixes: [] };
+            if (!parsed.playlists) parsed.playlists = [];
+            if (!parsed.mixes) parsed.mixes = [];
+            return parsed;
+        } catch {
+            return { artists: [], albums: [], playlists: [], mixes: [] };
+        }
+    },
+
+    _save(data) {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+    },
+
+    getRecents() {
+        return this._get();
+    },
+
+    _add(type, item) {
+        const data = this._get();
+        data[type] = data[type].filter((i) => i.id !== item.id);
+        data[type].unshift(item);
+        data[type] = data[type].slice(0, this.LIMIT);
+        this._save(data);
+    },
+
+    clear() {
+        this._save({ artists: [], albums: [], playlists: [], mixes: [] });
+    },
+
+    addArtist(artist) {
+        this._add('artists', artist);
+    },
+
+    addAlbum(album) {
+        this._add('albums', album);
+    },
+
+    addPlaylist(playlist) {
+        this._add('playlists', playlist);
+    },
+
+    addMix(mix) {
+        this._add('mixes', mix);
+    },
+};
+
+export const themeManager = {
+    STORAGE_KEY: 'loop-theme',
+    CUSTOM_THEME_KEY: 'loop-custom-theme',
+
+    defaultThemes: {
+        light: {},
+        dark: {},
+        monochrome: {},
+    },
+
+    getTheme() {
+        try {
+            return localStorage.getItem(this.STORAGE_KEY) || 'system';
+        } catch {
+            return 'system';
+        }
+    },
+
+    setTheme(theme) {
+        localStorage.setItem(this.STORAGE_KEY, theme);
+
+        if (theme === 'system') {
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        if (theme !== 'custom') {
+            const root = document.documentElement;
+            ['background', 'foreground', 'primary', 'secondary', 'muted', 'border', 'highlight'].forEach((key) => {
+                root.style.removeProperty(`--${key}`);
+            });
+        } else {
+            const customTheme = this.getCustomTheme();
+            if (customTheme) {
+                this.applyCustomTheme(customTheme);
+            }
+        }
+    },
+
+    getCustomTheme() {
+        try {
+            const stored = localStorage.getItem(this.CUSTOM_THEME_KEY);
+            return stored ? JSON.parse(stored) : null;
+        } catch {
+            return null;
+        }
+    },
+
+    setCustomTheme(colors) {
+        localStorage.setItem(this.CUSTOM_THEME_KEY, JSON.stringify(colors));
+        this.applyCustomTheme(colors);
+        this.setTheme('custom');
+    },
+
+    applyCustomTheme(colors) {
+        const root = document.documentElement;
+        for (const [key, value] of Object.entries(colors)) {
+            root.style.setProperty(`--${key}`, value);
+        }
+    },
+};
+
+export const lastFMStorage = {
+    isEnabled() {
+        try {
+            return localStorage.getItem(this.STORAGE_KEY) === 'true';
+        } catch {
+            return false;
+        }
+    },
+
+    setEnabled(enabled) {
+        localStorage.setItem(this.STORAGE_KEY, enabled ? 'true' : 'false');
+    },
+
+    shouldLoveOnLike() {
+        try {
+            return localStorage.getItem(this.LOVE_ON_LIKE_KEY) === 'true';
+        } catch {
+            return false;
+        }
+    },
+
+    setLoveOnLike(enabled) {
+        localStorage.setItem(this.LOVE_ON_LIKE_KEY, enabled ? 'true' : 'false');
+    },
+};
+
+export const nowPlayingSettings = {
+    STORAGE_KEY: 'now-playing-mode',
+
+    getMode() {
+        try {
+            return localStorage.getItem(this.STORAGE_KEY) || 'cover';
+        } catch {
+            return 'cover';
+        }
+    },
+
+    setMode(mode) {
+        localStorage.setItem(this.STORAGE_KEY, mode);
+    },
+};
+
+export const lyricsSettings = {
+    DOWNLOAD_WITH_TRACKS: 'lyrics-download-with-tracks',
+
+    shouldDownloadLyrics() {
+        try {
+            return localStorage.getItem(this.DOWNLOAD_WITH_TRACKS) === 'true';
+        } catch {
+            return false;
+        }
+    },
+
+    setDownloadLyrics(enabled) {
+        localStorage.setItem(this.DOWNLOAD_WITH_TRACKS, enabled ? 'true' : 'false');
+    },
+};
+
+export const backgroundSettings = {
+    STORAGE_KEY: 'album-background-enabled',
+
+    isEnabled() {
+        try {
+            // Default to true if not set
+            return localStorage.getItem(this.STORAGE_KEY) !== 'false';
+        } catch {
+            return true;
+        }
+    },
+
+    setEnabled(enabled) {
+        localStorage.setItem(this.STORAGE_KEY, enabled ? 'true' : 'false');
+    },
+};
+
+export const trackListSettings = {
+    STORAGE_KEY: 'track-list-actions-mode',
+
+    getMode() {
+        try {
+            const mode = localStorage.getItem(this.STORAGE_KEY) || 'dropdown';
+            document.documentElement.setAttribute('data-track-actions-mode', mode);
+            return mode;
+        } catch {
+            return 'dropdown';
+        }
+    },
+
+    setMode(mode) {
+        localStorage.setItem(this.STORAGE_KEY, mode);
+        document.documentElement.setAttribute('data-track-actions-mode', mode);
+    },
+};
+
+export const cardSettings = {
+    COMPACT_ARTIST_KEY: 'card-compact-artist',
+    COMPACT_ALBUM_KEY: 'card-compact-album',
+
+    isCompactArtist() {
+        try {
+            const val = localStorage.getItem(this.COMPACT_ARTIST_KEY);
+            return val === null ? true : val === 'true';
+        } catch {
+            return true;
+        }
+    },
+
+    setCompactArtist(enabled) {
+        localStorage.setItem(this.COMPACT_ARTIST_KEY, enabled ? 'true' : 'false');
+    },
+
+    isCompactAlbum() {
+        try {
+            return localStorage.getItem(this.COMPACT_ALBUM_KEY) === 'true';
+        } catch {
+            return false;
+        }
+    },
+
+    setCompactAlbum(enabled) {
+        localStorage.setItem(this.COMPACT_ALBUM_KEY, enabled ? 'true' : 'false');
+    },
+};
+
+export const replayGainSettings = {
+    STORAGE_KEY_MODE: 'replay-gain-mode', // 'off', 'track', 'album'
+    STORAGE_KEY_PREAMP: 'replay-gain-preamp',
+    getMode() {
+        return localStorage.getItem(this.STORAGE_KEY_MODE) || 'track';
+    },
+    setMode(mode) {
+        localStorage.setItem(this.STORAGE_KEY_MODE, mode);
+    },
+    getPreamp() {
+        const val = parseFloat(localStorage.getItem(this.STORAGE_KEY_PREAMP));
+        return isNaN(val) ? 3 : val;
+    },
+    setPreamp(db) {
+        localStorage.setItem(this.STORAGE_KEY_PREAMP, db);
+    },
+};
+
+export const downloadQualitySettings = {
+    STORAGE_KEY: 'download-quality',
+    getQuality() {
+        try {
+            return localStorage.getItem(this.STORAGE_KEY) || 'LOSSLESS';
+        } catch {
+            return 'LOSSLESS';
+        }
+    },
+    setQuality(quality) {
+        localStorage.setItem(this.STORAGE_KEY, quality);
+    },
+};
+
+export const waveformSettings = {
+    STORAGE_KEY: 'waveform-seekbar-enabled',
+
+    isEnabled() {
+        try {
+            return localStorage.getItem(this.STORAGE_KEY) === 'true';
+        } catch {
+            return false;
+        }
+    },
+
+    setEnabled(enabled) {
+        localStorage.setItem(this.STORAGE_KEY, enabled ? 'true' : 'false');
+    },
+};
+
+export const smoothScrollingSettings = {
+    STORAGE_KEY: 'smooth-scrolling-enabled',
+
+    isEnabled() {
+        try {
+            return localStorage.getItem(this.STORAGE_KEY) === 'true';
+        } catch {
+            return false;
+        }
+    },
+
+    setEnabled(enabled) {
+        localStorage.setItem(this.STORAGE_KEY, enabled ? 'true' : 'false');
+    },
+};
+
+export const qualityBadgeSettings = {
+    STORAGE_KEY: 'show-quality-badges',
+
+    isEnabled() {
+        try {
+            const val = localStorage.getItem(this.STORAGE_KEY);
+            return val === null ? true : val === 'true';
+        } catch {
+            return true;
+        }
+    },
+
+    setEnabled(enabled) {
+        localStorage.setItem(this.STORAGE_KEY, enabled ? 'true' : 'false');
+    },
+};
+
+export const bulkDownloadSettings = {
+    STORAGE_KEY: 'force-individual-downloads',
+
+    shouldForceIndividual() {
+        try {
+            return localStorage.getItem(this.STORAGE_KEY) === 'true';
+        } catch {
+            return false;
+        }
+    },
+
+    setForceIndividual(enabled) {
+        localStorage.setItem(this.STORAGE_KEY, enabled ? 'true' : 'false');
+    },
+};
+
+export const accentColorSettings = {
+    STORAGE_KEY: 'accent-color-mode',
+    CUSTOM_COLOR_KEY: 'accent-color-custom',
+
+    // Preset accent colors
+    presets: {
+        dynamic: null, // Uses album art color
+        blue: '#3b82f6',
+        purple: '#8b5cf6',
+        pink: '#ec4899',
+        red: '#ef4444',
+        orange: '#f97316',
+        green: '#22c55e',
+        teal: '#14b8a6',
+        white: '#ffffff',
+    },
+
+    getMode() {
+        try {
+            return localStorage.getItem(this.STORAGE_KEY) || 'dynamic';
+        } catch {
+            return 'dynamic';
+        }
+    },
+
+    setMode(mode) {
+        localStorage.setItem(this.STORAGE_KEY, mode);
+        if (mode !== 'dynamic') {
+            this.applyAccentColor(this.getColor());
+        }
+    },
+
+    getCustomColor() {
+        try {
+            return localStorage.getItem(this.CUSTOM_COLOR_KEY) || '#3b82f6';
+        } catch {
+            return '#3b82f6';
+        }
+    },
+
+    setCustomColor(color) {
+        localStorage.setItem(this.CUSTOM_COLOR_KEY, color);
+        if (this.getMode() === 'custom') {
+            this.applyAccentColor(color);
+        }
+    },
+
+    getColor() {
+        const mode = this.getMode();
+        if (mode === 'custom') {
+            return this.getCustomColor();
+        }
+        return this.presets[mode] || null;
+    },
+
+    isDynamic() {
+        return this.getMode() === 'dynamic';
+    },
+
+    applyAccentColor(color) {
+        if (!color) return;
+        const root = document.documentElement;
+
+        // Parse hex color to RGB
+        const hex = color.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+
+        // Calculate brightness for text contrast
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        const foreground = brightness > 128 ? '#000000' : '#ffffff';
+
+        root.style.setProperty('--primary', color);
+        root.style.setProperty('--primary-foreground', foreground);
+        root.style.setProperty('--highlight', color);
+        root.style.setProperty('--highlight-rgb', `${r}, ${g}, ${b}`);
+        root.style.setProperty('--active-highlight', color);
+        root.style.setProperty('--ring', color);
+    },
+};
+
+export const queueManager = {
+    STORAGE_KEY: 'loop-queue',
+
+    getQueue() {
+        try {
+            const data = localStorage.getItem(this.STORAGE_KEY);
+            return data ? JSON.parse(data) : null;
+        } catch {
+            return null;
+        }
+    },
+
+    saveQueue(queueState) {
+        try {
+            // Only save essential data to avoid quota limits
+            const minimalState = {
+                queue: queueState.queue,
+                shuffledQueue: queueState.shuffledQueue,
+                originalQueueBeforeShuffle: queueState.originalQueueBeforeShuffle,
+                currentQueueIndex: queueState.currentQueueIndex,
+                shuffleActive: queueState.shuffleActive,
+                repeatMode: queueState.repeatMode,
+            };
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(minimalState));
+        } catch (e) {
+            console.warn('Failed to save queue to localStorage:', e);
+        }
+    },
+};
+
+// System theme listener
+if (typeof window !== 'undefined' && window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (themeManager.getTheme() === 'system') {
+            document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        }
+    });
+}

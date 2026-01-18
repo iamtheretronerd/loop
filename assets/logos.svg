@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 28">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&amp;display=swap');
+        text { font-family: 'Montserrat', sans-serif; font-weight: 300; fill: currentColor; }
+    </style>
+    <text x="0" y="22" font-size="22">L</text>
+    <text x="12" y="22" font-size="22">O</text>
+    <rect x="32" y="8" width="24" height="12" rx="6" ry="6" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <text x="60" y="22" font-size="22">P</text>
+</svg>

@@ -1,0 +1,245 @@
+/* Spotify-style Profile Page */
+
+/* Ensure Header stays on top of the profile background */
+.main-header {
+    z-index: 10 !important;
+}
+
+.spotify-header {
+    display: flex;
+    align-items: flex-end;
+    gap: 2rem;
+    background: linear-gradient(to bottom, #535353, #121212);
+    min-height: 340px;
+    
+    /* 
+       Negative top margin to pull background up behind the search bar.
+       Standard padding -2rem, plus extra -6rem for header area.
+       Total -8rem top margin.
+       Side margins -2rem for full bleed.
+    */
+    margin: -8rem -2rem 2rem -2rem;
+    
+    /* 
+       Add top padding to push content down so it doesn't overlap search bar.
+       Start with 8rem to match margin.
+    */
+    padding: 8rem 2rem 2rem 2rem;
+    
+    border-radius: 0;
+}
+
+.header-image {
+    width: 232px;
+    height: 232px;
+    min-width: 232px;
+    border-radius: 50%;
+    background: #282828;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    font-weight: 700;
+    box-shadow: 0 4px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+
+.header-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: #fff;
+    width: 100%;
+}
+
+.meta-label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.header-title {
+    font-size: 5rem;
+    font-weight: 900;
+    margin: 0.5rem 0;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.header-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: rgba(255,255,255,0.9);
+}
+
+.dot {
+    font-weight: bold;
+}
+
+.profile-actions-bar {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+}
+
+.action-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    border-color: #fff;
+    transform: scale(1.04);
+}
+
+.action-btn.icon-only {
+    padding: 0.5rem;
+    border: none;
+    color: rgba(255,255,255,0.6);
+}
+
+.action-btn.icon-only:hover {
+    color: #fff;
+    transform: none;
+}
+
+.content-section {
+    padding: 0 1rem;
+}
+
+.content-section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.playlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.5rem;
+}
+
+.spotify-card {
+    background: #181818;
+    padding: 1rem;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    border: none;
+}
+
+.spotify-card:hover {
+    background: #282828;
+}
+
+.card-image {
+    width: 100%;
+    aspect-ratio: 1/1;
+    background: #333;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.play-btn-hover {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #000;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 8px rgba(0,0,0,0.3);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.3s ease;
+}
+
+.spotify-card:hover .play-btn-hover {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-desc {
+    font-size: 0.875rem;
+    color: #a7a7a7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Auth Page overrides */
+.auth-page-container {
+    padding-top: 4rem;
+}
+
+@media (max-width: 768px) {
+    .spotify-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        height: auto;
+        padding-top: 8rem; /* Matches desktop top padding */
+        margin-top: -8rem;
+    }
+    
+    .header-image {
+        width: 180px;
+        height: 180px;
+        min-width: 180px;
+    }
+    
+    .header-title {
+        font-size: 2.5rem;
+    }
+    
+    .profile-actions-bar {
+        justify-content: center;
+    }
+}
