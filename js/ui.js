@@ -163,6 +163,12 @@ export class UIRenderer {
     }
 
     updateGlobalTheme() {
+        // First check if we should even be doing dynamic coloring
+        if (!accentColorSettings.isDynamic()) {
+            accentColorSettings.applyAccentColor(accentColorSettings.getColor());
+            return;
+        }
+
         // Check if we are currently viewing an album page
         const isAlbumPage = document.getElementById('page-album').classList.contains('active');
 
@@ -571,7 +577,10 @@ export class UIRenderer {
 
     setVibrantColor(color) {
         // Skip dynamic color if user has selected a fixed accent color
-        if (!accentColorSettings.isDynamic()) return;
+        if (!accentColorSettings.isDynamic()) {
+            accentColorSettings.applyAccentColor(accentColorSettings.getColor());
+            return;
+        }
         if (!color) return;
 
         const root = document.documentElement;
@@ -645,6 +654,12 @@ export class UIRenderer {
     }
 
     resetVibrantColor() {
+        // If static color is enabled, restore it instead of clearing
+        if (!accentColorSettings.isDynamic()) {
+            accentColorSettings.applyAccentColor(accentColorSettings.getColor());
+            return;
+        }
+
         const root = document.documentElement;
         root.style.removeProperty('--primary');
         root.style.removeProperty('--primary-foreground');
@@ -714,9 +729,7 @@ export class UIRenderer {
             page.classList.toggle('active', page.id === `page-${pageId}`);
         });
 
-        document.querySelectorAll('.sidebar-nav a').forEach((link) => {
-            link.classList.toggle('active', link.hash === `#${pageId}`);
-        });
+
 
         document.querySelector('.main-content').scrollTop = 0;
 

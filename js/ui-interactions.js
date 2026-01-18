@@ -13,31 +13,12 @@ import { sidePanelManager } from './side-panel.js';
 import { downloadQualitySettings } from './storage.js';
 
 export function initializeUIInteractions(player, api) {
-    const sidebar = document.querySelector('.sidebar');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
-    const hamburgerBtn = document.getElementById('hamburger-btn');
+
     const queueBtn = document.getElementById('queue-btn');
 
     let draggedQueueIndex = null;
 
-    // Sidebar mobile
-    hamburgerBtn.addEventListener('click', () => {
-        sidebar.classList.add('is-open');
-        sidebarOverlay.classList.add('is-visible');
-    });
 
-    const closeSidebar = () => {
-        sidebar.classList.remove('is-open');
-        sidebarOverlay.classList.remove('is-visible');
-    };
-
-    sidebarOverlay.addEventListener('click', closeSidebar);
-
-    sidebar.addEventListener('click', (e) => {
-        if (e.target.closest('a')) {
-            closeSidebar();
-        }
-    });
 
     // Queue panel
     const renderQueueControls = (container) => {
@@ -403,4 +384,38 @@ export function initializeUIInteractions(player, api) {
             document.getElementById(contentId)?.classList.add('active');
         });
     });
+
+    // Mobile Search Toggle
+    const mobileSearchBtn = document.getElementById('mobile-search-btn');
+    const mobileSearchOverlay = document.getElementById('mobile-search-overlay');
+    const mobileSearchBack = document.getElementById('mobile-search-back');
+    const mobileSearchInput = document.getElementById('mobile-search-input');
+    const topSearchInput = document.getElementById('top-search-input');
+
+    if (mobileSearchBtn && mobileSearchOverlay) {
+        mobileSearchBtn.addEventListener('click', () => {
+            mobileSearchOverlay.classList.add('active');
+            if (mobileSearchInput) {
+                setTimeout(() => mobileSearchInput.focus(), 100);
+            }
+        });
+    }
+
+    if (mobileSearchBack && mobileSearchOverlay) {
+        mobileSearchBack.addEventListener('click', () => {
+            mobileSearchOverlay.classList.remove('active');
+        });
+    }
+
+    // Sync mobile search with main search input
+    if (mobileSearchInput && topSearchInput) {
+        mobileSearchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && mobileSearchInput.value.trim()) {
+                // Sync value to main input and trigger search
+                topSearchInput.value = mobileSearchInput.value.trim();
+                topSearchInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+                mobileSearchOverlay?.classList.remove('active');
+            }
+        });
+    }
 }

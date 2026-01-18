@@ -388,7 +388,7 @@
 
         <div class="app-container">
             <!-- New Top Navigation Bar -->
-            <nav class="top-nav">
+            <nav class="top-nav" id="top-nav">
                 <div class="top-nav-left">
                     <a href="#home" class="top-nav-logo" aria-label="Loop Music">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 28" class="loop-logo">
@@ -399,6 +399,7 @@
                             <text x="60" y="22" font-size="22">P</text>
                         </svg>
                     </a>
+                    <!-- Navigation links - hidden on mobile -->
                     <a href="#home" class="top-nav-btn" data-nav="home" data-tooltip="Home">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
@@ -426,6 +427,12 @@
                     </div>
                 </div>
                 <div class="top-nav-right">
+                    <!-- Mobile search toggle button -->
+                    <button class="top-nav-btn mobile-only" id="mobile-search-btn" aria-label="Search">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+                        </svg>
+                    </button>
                     <a href="#settings" class="top-nav-btn" data-nav="settings" data-tooltip="Settings">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
@@ -440,95 +447,24 @@
                         <img class="profile-avatar" id="top-nav-avatar" src="" alt="Profile" style="display: none;" />
                     </a>
                 </div>
+                <!-- Mobile expanded search overlay -->
+                <div class="mobile-search-overlay" id="mobile-search-overlay">
+                    <div class="mobile-search-container">
+                        <button class="mobile-search-back" id="mobile-search-back" aria-label="Close search">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m15 18-6-6 6-6"/>
+                            </svg>
+                        </button>
+                        <input type="text" id="mobile-search-input" class="mobile-search-input" placeholder="Search..." autocomplete="off" />
+                    </div>
+                </div>
             </nav>
 
-            <!-- Keep old sidebar for mobile menu (hidden by default) -->
-            <aside class="sidebar">
-                <div>
-                    <div class="sidebar-logo">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 28" class="loop-logo">
-                            <style>text { font-family: 'Montserrat', sans-serif; font-weight: 300; fill: currentColor; }</style>
-                            <text x="0" y="22" font-size="22">L</text>
-                            <text x="12" y="22" font-size="22">O</text>
-                            <rect x="32" y="8" width="24" height="12" rx="6" ry="6" fill="none" stroke="currentColor" stroke-width="1.8"/>
-                            <text x="60" y="22" font-size="22">P</text>
-                        </svg>
-                    </div>
-                    <nav class="sidebar-nav">
-                        <ul>
-                            <li class="nav-item"><a href="#home"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg><span>Home</span></a></li>
-                            <li class="nav-item"><a href="#library"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 6 4 14" /><path d="M12 6v14" /><path d="M8 8v12" /><path d="M4 4v16" /></svg><span>Library</span></a></li>
-                            <li class="nav-item"><a href="#recent"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg><span>Recent</span></a></li>
-                            <li class="nav-item"><a href="#settings"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg><span>Settings</span></a></li>
-                            <li class="nav-item"><a href="#account"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5" /><path d="M20 21a8 8 0 0 0-16 0" /></svg><span>Account</span></a></li>
-                        </ul>
-                    </nav>
-                </div>
-            </aside>
+
 
             <main class="main-content">
                 <div id="page-background"></div>
-                <header class="main-header">
-                    <button class="hamburger-menu" id="hamburger-menu" title="Menu">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" />
-                        </svg>
-                    </button>
-                    <div class="navigation-controls desktop-only">
-                        <button id="nav-back" class="nav-btn" title="Go Back">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="m15 18-6-6 6-6" />
-                            </svg>
-                        </button>
-                        <button id="nav-forward" class="nav-btn" title="Go Forward">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path d="m9 18 6-6-6-6" />
-                            </svg>
-                        </button>
-                    </div>
-                    <button class="hamburger-menu" id="hamburger-btn" title="Open navigation">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                        </svg>
-                    </button>
-                    <form class="search-bar" id="search-form">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                        <input type="search" id="search-input" placeholder="Search for tracks, artists, albums..." />
-                    </form>
-                </header>
+
 
                 <div id="page-home" class="page">
                     <div id="home-welcome" style="display: none; text-align: center; padding: 4rem 2rem">

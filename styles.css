@@ -189,10 +189,7 @@ kbd {
         'player' auto / 1fr;
 }
 
-/* Hide original sidebar - now using top nav */
-.sidebar {
-    display: none;
-}
+
 
 /* New Top Navigation Bar */
 .top-nav {
@@ -382,35 +379,7 @@ kbd {
     height: var(--player-bar-height-desktop);
 }
 
-.sidebar-logo {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-}
 
-.sidebar-logo .loop-logo {
-    width: auto;
-    height: 18px;
-}
-
-.sidebar-nav ul {
-    list-style: none;
-}
-
-.sidebar-nav .nav-item a {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 0.7rem 0.9rem;
-    border-radius: var(--radius);
-    color: var(--muted-foreground);
-    font-weight: 500;
-    font-size: 0.9rem;
-    transition: all var(--transition);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
 
 .search-bar svg {
     position: absolute;
@@ -424,90 +393,9 @@ kbd {
     z-index: 2;
 }
 
-.sidebar-nav .nav-item a:hover {
-    background-color: var(--secondary);
-    color: var(--foreground);
-    transform: translateX(4px);
-}
 
-.sidebar-nav .nav-item a.active {
-    background: linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary), var(--highlight) 30%) 100%);
-    color: var(--primary-foreground);
-    box-shadow: 0 4px 12px rgb(var(--highlight-rgb), 0.25);
-}
 
-.sidebar-nav .nav-item a.active:hover {
-    transform: translateX(0);
-}
 
-.sidebar-nav .nav-item a svg {
-    width: 20px;
-    height: 20px;
-}
-
-#sidebar-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgb(0, 0, 0, 0.5);
-    z-index: 1999;
-    backdrop-filter: blur(2px);
-}
-
-.main-header {
-    display: none; /* Hidden on desktop - search is in top nav */
-    justify-content: center;
-    align-items: center;
-    margin-bottom: var(--spacing-xl);
-    gap: var(--spacing-md);
-    position: relative;
-}
-
-.navigation-controls {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.nav-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: var(--card);
-    border: none;
-    color: var(--foreground);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.nav-btn:hover {
-    background-color: var(--secondary);
-    transform: scale(1.05);
-}
-
-.nav-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.hamburger-menu {
-    display: none;
-    background: transparent;
-    border: none;
-    color: var(--foreground);
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: var(--radius);
-    transition: background-color var(--transition);
-}
-
-.hamburger-menu:hover {
-    background-color: var(--secondary);
-}
 
 .search-bar {
     position: relative;
@@ -3948,6 +3836,109 @@ img[src=''] {
         display: none !important;
     }
 
+    /* Compact Mobile Top Bar */
+    .top-nav {
+        padding: 0.5rem 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .top-nav-left {
+        gap: 0;
+    }
+
+    .top-nav-logo .loop-logo {
+        height: 16px;
+    }
+
+    .top-nav-center {
+        display: none; /* Hide desktop search on mobile */
+    }
+
+    .top-nav-right {
+        gap: 0;
+    }
+
+    .top-nav-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .top-nav-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Mobile Search Overlay */
+    .mobile-search-overlay {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100%;
+        background: color-mix(in srgb, var(--background), var(--card) 95%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        z-index: 200;
+        align-items: center;
+        padding: 0 0.75rem;
+        animation: fadeIn 0.15s ease;
+    }
+
+    .mobile-search-overlay.active {
+        display: flex;
+    }
+
+    .mobile-search-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .mobile-search-back {
+        background: none;
+        border: none;
+        color: var(--foreground);
+        padding: 0.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius);
+        transition: background var(--transition);
+    }
+
+    .mobile-search-back:hover {
+        background: var(--secondary);
+    }
+
+    .mobile-search-input {
+        flex: 1;
+        background: var(--secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 0.6rem 1rem;
+        font-size: 0.95rem;
+        color: var(--foreground);
+        outline: none;
+        transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .mobile-search-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgb(var(--highlight-rgb), 0.15);
+    }
+
+    .mobile-search-input::placeholder {
+        color: var(--muted-foreground);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
     /* position the cast button on mobile to the bottom right cuz damn shit already cluttered */
     #cast-btn {
         position: absolute !important;
@@ -4171,42 +4162,9 @@ img[src=''] {
         grid-area: main;
     }
 
-    .main-header {
-        display: flex;
-        margin-bottom: var(--spacing-md);
-    }
 
-    .sidebar {
-        display: flex;
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 200px;
-        transform: translateX(-100%);
-        z-index: 2000;
-        transition:
-            transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-            box-shadow 0.3s ease;
-        background: var(--card);
-        border-right: 1px solid var(--border);
-        padding: 1.25rem 1rem;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
 
-    .sidebar.is-open {
-        transform: translateX(0);
-        box-shadow: 0 0 20px rgb(0, 0, 0, 0.5);
-    }
 
-    .hamburger-menu {
-        display: block;
-    }
-
-    #sidebar-overlay.is-visible {
-        display: block;
-    }
 
     .search-bar {
         max-width: none;
@@ -4485,8 +4443,10 @@ img[src=''] {
         height: 32px;
     }
 
-    .sidebar-nav .nav-item a {
-        padding: 1rem 0.75rem;
+
+
+    .carousel-nav-btn {
+        display: none !important;
     }
 
     .offline-notification,
