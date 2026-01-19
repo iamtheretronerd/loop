@@ -117,17 +117,6 @@ export const apiSettings = {
         const stored = localStorage.getItem(this.STORAGE_KEY);
         if (stored) {
             instancesObj = JSON.parse(stored);
-
-            // love it when local storage doesnt update
-            if (instancesObj?.api?.length === 2) {
-                const hasBinimum = instancesObj.api.some((url) => url.includes('tidal-api.binimum.org'));
-                const hasSamidy = instancesObj.api.some((url) => url.includes('monochrome-api.samidy.com'));
-
-                if (hasBinimum && hasSamidy) {
-                    localStorage.removeItem(this.STORAGE_KEY);
-                    instancesObj = null;
-                }
-            }
         }
 
         if (!instancesObj) {

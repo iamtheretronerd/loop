@@ -74,17 +74,20 @@ export function initializePlayerEvents(player, audioPlayer, scrobbler, ui) {
         player.updateMediaSessionPlaybackState();
         player.updateMediaSessionPositionState();
         updateTabTitle(player);
+        ui.updateFullscreenPlayState(true);
     });
 
     audioPlayer.addEventListener('playing', () => {
         player.updateMediaSessionPlaybackState();
         player.updateMediaSessionPositionState();
+        ui.updateFullscreenPlayState(true);
     });
 
     audioPlayer.addEventListener('pause', () => {
         playPauseBtn.innerHTML = SVG_PLAY;
         player.updateMediaSessionPlaybackState();
         player.updateMediaSessionPositionState();
+        ui.updateFullscreenPlayState(false);
     });
 
     audioPlayer.addEventListener('ended', () => {
@@ -98,6 +101,9 @@ export function initializePlayerEvents(player, audioPlayer, scrobbler, ui) {
             const currentTimeEl = document.getElementById('current-time');
             progressFill.style.width = `${(currentTime / duration) * 100}%`;
             currentTimeEl.textContent = formatTime(currentTime);
+
+            // Update fullscreen player progress
+            ui.updateFullscreenProgress(currentTime, duration);
 
             // Log to history after 10 seconds of playback
             if (currentTime >= 10 && player.currentTrack && player.currentTrack.id !== historyLoggedTrackId) {

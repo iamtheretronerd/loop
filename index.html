@@ -50,40 +50,156 @@
         </div>
 
         <div id="fullscreen-cover-overlay" style="display: none">
-            <div class="fullscreen-cover-content">
-                <button id="close-fullscreen-cover-btn" title="Close">&times;</button>
-                <button id="toggle-fullscreen-lyrics-btn" class="fullscreen-lyrics-toggle" title="Toggle Lyrics">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                        <line x1="12" y1="19" x2="12" y2="22" />
-                        <line x1="8" y1="22" x2="16" y2="22" />
+            <div class="fs-header">
+                <button id="close-fullscreen-cover-btn" class="fs-btn" title="Minimize">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m6 9 6 6 6-6"/>
                     </svg>
                 </button>
-                <div class="fullscreen-main-view">
-                    <img
-                        id="fullscreen-cover-image"
-                        src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                        alt="Album Cover"
-                    />
-                    <div class="fullscreen-track-info">
-                        <h2 id="fullscreen-track-title"></h2>
-                        <h3 id="fullscreen-track-artist"></h3>
-                        <div id="fullscreen-next-track" style="display: none">
-                            <span class="label">Up Next: </span>
-                            <span class="value"></span>
+                <div class="fs-header-info">
+                    <span class="fs-playing-from-label">Playing from</span>
+                    <span class="fs-playing-from-value" id="fs-playing-from"></span>
+                </div>
+                <button id="fs-queue-btn" class="fs-btn" title="Queue">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="fs-content">
+                <div class="fs-artwork-container">
+                    <img id="fullscreen-cover-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Album Cover" />
+                </div>
+
+                <div class="fs-info-controls">
+                    <div class="fs-track-info">
+                        <div class="fs-track-details">
+                            <h1 id="fullscreen-track-title"></h1>
+                            <h2 id="fullscreen-track-artist"></h2>
+                        </div>
+                        <button id="fs-like-btn" class="fs-btn fs-like-btn" title="Add to Liked Songs">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="fs-progress">
+                        <div class="fs-progress-bar-container" id="fs-progress-container">
+                            <div class="fs-progress-bar" id="fs-progress-bar"></div>
+                        </div>
+                        <div class="fs-progress-times">
+                            <span id="fs-current-time">0:00</span>
+                            <span id="fs-duration">0:00</span>
                         </div>
                     </div>
+
+                    <div class="fs-controls">
+                        <button id="fs-shuffle-btn" class="fs-btn fs-control-btn" title="Shuffle">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/>
+                            </svg>
+                        </button>
+                        <button id="fs-prev-btn" class="fs-btn fs-control-btn fs-control-main" title="Previous">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/>
+                            </svg>
+                        </button>
+                        <button id="fs-play-btn" class="fs-btn fs-play-btn" title="Play">
+                            <svg class="play-icon" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            <svg class="pause-icon" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 4h4v16H6zM14 4h4v16h-4z"/>
+                            </svg>
+                        </button>
+                        <button id="fs-next-btn" class="fs-btn fs-control-btn fs-control-main" title="Next">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 18 14.5 12 6 6zM16 6h2v12h-2z"/>
+                            </svg>
+                        </button>
+                        <button id="fs-repeat-btn" class="fs-btn fs-control-btn" title="Repeat">
+                            <svg class="repeat-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>
+                            </svg>
+                            <span class="repeat-one-indicator">1</span>
+                        </button>
+                    </div>
+
+                    <div class="fs-extra-controls">
+                        <button id="toggle-fullscreen-lyrics-btn" class="fs-btn fs-extra-btn" title="Lyrics">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                            </svg>
+                            <span>Lyrics</span>
+                        </button>
+                        <div class="fs-volume-control">
+                            <button id="fs-volume-btn" class="fs-btn fs-extra-btn" title="Volume">
+                                <svg class="volume-high" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                                </svg>
+                                <svg class="volume-muted" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+                                </svg>
+                            </button>
+                            <div class="fs-volume-slider-container">
+                                <input type="range" id="fs-volume-slider" class="fs-volume-slider" min="0" max="100" value="70" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fs-next-up" id="fullscreen-next-track">
+                <span class="fs-next-label">Next</span>
+                <span class="fs-next-value"></span>
+            </div>
+
+            <!-- Fullscreen Lyrics Panel -->
+            <div class="fs-lyrics-panel" id="fs-lyrics-panel">
+                <div class="fs-lyrics-header">
+                    <h3>Lyrics</h3>
+                    <button id="fs-lyrics-close-btn" class="fs-btn" title="Close">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="fs-lyrics-content" id="fs-lyrics-content">
+                    <div class="fs-lyrics-loading">
+                        <svg class="fs-lyrics-spinner" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                        </svg>
+                        <span>Loading lyrics...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fullscreen Queue Panel -->
+            <div class="fs-queue-panel" id="fs-queue-panel">
+                <div class="fs-queue-header">
+                    <h3>Queue</h3>
+                    <div class="fs-queue-actions">
+                        <button id="fs-queue-clear-btn" class="fs-btn" title="Clear Queue">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                            </svg>
+                        </button>
+                        <button id="fs-queue-close-btn" class="fs-btn" title="Close">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="fs-queue-now-playing" id="fs-queue-now-playing">
+                    <span class="fs-queue-section-label">Now Playing</span>
+                    <div class="fs-queue-current-track"></div>
+                </div>
+                <div class="fs-queue-list-container">
+                    <span class="fs-queue-section-label">Next Up</span>
+                    <div class="fs-queue-list" id="fs-queue-list"></div>
                 </div>
             </div>
         </div>

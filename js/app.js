@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ui.closeFullscreenCover();
             } else {
                 const nextTrack = player.getNextTrack();
-                ui.showFullscreenCover(player.currentTrack, nextTrack, lyricsManager, audioPlayer);
+                ui.showFullscreenCover(player.currentTrack, nextTrack, lyricsManager, audioPlayer, player);
             }
         } else {
             // Default to 'album' mode - navigate to album
@@ -323,10 +323,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     document.getElementById('close-fullscreen-cover-btn')?.addEventListener('click', () => {
-        ui.closeFullscreenCover();
-    });
-
-    document.getElementById('fullscreen-cover-image')?.addEventListener('click', () => {
         ui.closeFullscreenCover();
     });
 
@@ -383,7 +379,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fullscreenOverlay = document.getElementById('fullscreen-cover-overlay');
         if (fullscreenOverlay && getComputedStyle(fullscreenOverlay).display !== 'none') {
             const nextTrack = player.getNextTrack();
-            ui.showFullscreenCover(player.currentTrack, nextTrack, lyricsManager, audioPlayer);
+            ui.showFullscreenCover(player.currentTrack, nextTrack, lyricsManager, audioPlayer, player);
         }
     });
 

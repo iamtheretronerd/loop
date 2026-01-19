@@ -670,58 +670,528 @@ export class UIRenderer {
         root.style.removeProperty('--track-hover-bg');
     }
 
-    async showFullscreenCover(track, nextTrack, lyricsManager, audioPlayer) {
+    async showFullscreenCover(track, nextTrack, lyricsManager, audioPlayer, player) {
         if (!track) return;
+
+        this.fsPlayer = player;
+        this.fsAudioPlayer = audioPlayer;
+        this.fsLyricsManager = lyricsManager;
+        this.fsCurrentTrack = track;
+
         const overlay = document.getElementById('fullscreen-cover-overlay');
         const image = document.getElementById('fullscreen-cover-image');
         const title = document.getElementById('fullscreen-track-title');
         const artist = document.getElementById('fullscreen-track-artist');
         const nextTrackEl = document.getElementById('fullscreen-next-track');
-        const lyricsContainer = document.getElementById('fullscreen-lyrics-container');
         const lyricsToggleBtn = document.getElementById('toggle-fullscreen-lyrics-btn');
+        const playingFrom = document.getElementById('fs-playing-from');
 
+        // Update track info
         const coverUrl = this.api.getCoverUrl(track.album?.cover, '1280');
         image.src = coverUrl;
         const qualityBadge = createQualityBadgeHTML(track);
         title.innerHTML = `${escapeHtml(track.title)} ${qualityBadge}`;
         artist.textContent = getTrackArtists(track);
-
-        if (nextTrack) {
-            nextTrackEl.style.display = 'flex';
-            nextTrackEl.querySelector('.value').textContent = `${nextTrack.title} • ${getTrackArtists(nextTrack)}`;
-
-            nextTrackEl.classList.remove('animate-in');
-            void nextTrackEl.offsetWidth;
-            nextTrackEl.classList.add('animate-in');
-        } else {
-            nextTrackEl.style.display = 'none';
-            nextTrackEl.classList.remove('animate-in');
-        }
-
         overlay.style.setProperty('--bg-image', `url('${coverUrl}')`);
 
+        // Set playing from context
+        if (track.album?.title) {
+            playingFrom.textContent = track.album.title;
+        } else {
+            playingFrom.textContent = 'Queue';
+        }
+
+        // Update next track
+        if (nextTrack) {
+            nextTrackEl.classList.add('visible');
+            nextTrackEl.querySelector('.fs-next-value').textContent = `${nextTrack.title} - ${getTrackArtists(nextTrack)}`;
+        } else {
+            nextTrackEl.classList.remove('visible');
+        }
+
+        // Setup lyrics toggle
         if (lyricsManager && audioPlayer) {
             lyricsToggleBtn.style.display = 'flex';
             lyricsToggleBtn.classList.remove('active');
-
-            const toggleLyrics = () => {
-                openLyricsPanel(track, audioPlayer, lyricsManager);
-                lyricsToggleBtn.classList.toggle('active');
-            };
-
-            const newToggleBtn = lyricsToggleBtn.cloneNode(true);
-            lyricsToggleBtn.parentNode.replaceChild(newToggleBtn, lyricsToggleBtn);
-            newToggleBtn.addEventListener('click', toggleLyrics);
         } else {
             lyricsToggleBtn.style.display = 'none';
         }
 
+        // Initialize fullscreen controls if not already done
+        if (!this.fsControlsInitialized) {
+            this.initFullscreenControls();
+        }
+
+        // Sync state with main player
+        this.syncFullscreenState();
+
         overlay.style.display = 'flex';
+    }
+
+    initFullscreenControls() {
+        const playBtn = document.getElementById('fs-play-btn');
+        const prevBtn = document.getElementById('fs-prev-btn');
+        const nextBtn = document.getElementById('fs-next-btn');
+        const shuffleBtn = document.getElementById('fs-shuffle-btn');
+        const repeatBtn = document.getElementById('fs-repeat-btn');
+        const likeBtn = document.getElementById('fs-like-btn');
+        const volumeBtn = document.getElementById('fs-volume-btn');
+        const volumeSlider = document.getElementById('fs-volume-slider');
+        const progressContainer = document.getElementById('fs-progress-container');
+        const lyricsToggleBtn = document.getElementById('toggle-fullscreen-lyrics-btn');
+        const queueBtn = document.getElementById('fs-queue-btn');
+
+        // Play/Pause - trigger main button
+        playBtn?.addEventListener('click', () => {
+            document.querySelector('.play-pause-btn')?.click();
+        });
+
+        // Previous/Next - trigger main buttons
+        prevBtn?.addEventListener('click', () => {
+            document.getElementById('prev-btn')?.click();
+        });
+
+        nextBtn?.addEventListener('click', () => {
+            document.getElementById('next-btn')?.click();
+        });
+
+        // Shuffle - trigger main button
+        shuffleBtn?.addEventListener('click', () => {
+            document.getElementById('shuffle-btn')?.click();
+            // Sync state after a short delay to allow main button handler to complete
+            setTimeout(() => this.syncFullscreenState(), 100);
+        });
+
+        // Repeat - trigger main button
+        repeatBtn?.addEventListener('click', () => {
+            document.getElementById('repeat-btn')?.click();
+            setTimeout(() => this.syncFullscreenState(), 100);
+        });
+
+        // Like button
+        likeBtn?.addEventListener('click', async () => {
+            if (this.fsCurrentTrack) {
+                const { db } = await import('./db.js');
+                await db.toggleFavorite('track', this.fsCurrentTrack);
+                const isLiked = await db.isFavorite('track', this.fsCurrentTrack.id);
+                likeBtn.classList.toggle('liked', isLiked);
+            }
+        });
+
+        // Volume
+        volumeBtn?.addEventListener('click', () => {
+            const volumeControl = volumeBtn.closest('.fs-volume-control');
+            if (volumeSlider.value > 0) {
+                this.fsPreviousVolume = volumeSlider.value;
+                volumeSlider.value = 0;
+                volumeControl.classList.add('muted');
+            } else {
+                volumeSlider.value = this.fsPreviousVolume || 70;
+                volumeControl.classList.remove('muted');
+            }
+            if (this.fsAudioPlayer) {
+                this.fsAudioPlayer.volume = volumeSlider.value / 100;
+            }
+        });
+
+        volumeSlider?.addEventListener('input', (e) => {
+            const value = e.target.value;
+            const volumeControl = volumeBtn.closest('.fs-volume-control');
+            if (this.fsAudioPlayer) {
+                this.fsAudioPlayer.volume = value / 100;
+            }
+            volumeControl.classList.toggle('muted', value == 0);
+        });
+
+        // Progress bar seeking
+        progressContainer?.addEventListener('click', (e) => {
+            if (this.fsAudioPlayer && this.fsAudioPlayer.duration) {
+                const rect = progressContainer.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                this.fsAudioPlayer.currentTime = percent * this.fsAudioPlayer.duration;
+            }
+        });
+
+        // Lyrics toggle - open fullscreen lyrics panel
+        lyricsToggleBtn?.addEventListener('click', () => {
+            this.toggleFullscreenLyrics();
+        });
+
+        // Lyrics panel close button
+        document.getElementById('fs-lyrics-close-btn')?.addEventListener('click', () => {
+            this.closeFullscreenLyrics();
+        });
+
+        // Queue button - open fullscreen queue panel
+        queueBtn?.addEventListener('click', () => {
+            this.toggleFullscreenQueue();
+        });
+
+        // Queue panel close button
+        document.getElementById('fs-queue-close-btn')?.addEventListener('click', () => {
+            this.closeFullscreenQueue();
+        });
+
+        // Queue panel clear button
+        document.getElementById('fs-queue-clear-btn')?.addEventListener('click', () => {
+            if (this.fsPlayer) {
+                this.fsPlayer.clearQueue();
+                this.renderFullscreenQueue();
+            }
+        });
+
+        this.fsControlsInitialized = true;
+    }
+
+    toggleFullscreenQueue() {
+        const panel = document.getElementById('fs-queue-panel');
+        if (panel) {
+            const isOpen = panel.classList.contains('open');
+            if (isOpen) {
+                this.closeFullscreenQueue();
+            } else {
+                this.openFullscreenQueue();
+            }
+        }
+    }
+
+    openFullscreenQueue() {
+        const panel = document.getElementById('fs-queue-panel');
+        if (panel) {
+            this.renderFullscreenQueue();
+            panel.classList.add('open');
+        }
+    }
+
+    closeFullscreenQueue() {
+        const panel = document.getElementById('fs-queue-panel');
+        if (panel) {
+            panel.classList.remove('open');
+        }
+    }
+
+    renderFullscreenQueue() {
+        if (!this.fsPlayer) return;
+
+        const currentTrackContainer = document.querySelector('.fs-queue-current-track');
+        const queueList = document.getElementById('fs-queue-list');
+
+        if (!currentTrackContainer || !queueList) return;
+
+        const queue = this.fsPlayer.shuffleActive ? this.fsPlayer.shuffledQueue : this.fsPlayer.queue;
+        const currentIndex = this.fsPlayer.currentQueueIndex;
+        const currentTrack = queue[currentIndex];
+
+        // Render current track
+        if (currentTrack) {
+            currentTrackContainer.innerHTML = this.createQueueItemHTML(currentTrack, currentIndex, true);
+        } else {
+            currentTrackContainer.innerHTML = '<p class="fs-queue-empty">No track playing</p>';
+        }
+
+        // Render upcoming tracks
+        const upcomingTracks = queue.slice(currentIndex + 1);
+        if (upcomingTracks.length > 0) {
+            queueList.innerHTML = upcomingTracks
+                .map((track, i) => this.createQueueItemHTML(track, currentIndex + 1 + i, false))
+                .join('');
+        } else {
+            queueList.innerHTML = '<p class="fs-queue-empty">No upcoming tracks</p>';
+        }
+
+        // Add click handlers for queue items
+        queueList.querySelectorAll('.fs-queue-item').forEach(item => {
+            const index = parseInt(item.dataset.index);
+
+            item.addEventListener('click', (e) => {
+                if (!e.target.closest('.fs-queue-item-remove')) {
+                    this.fsPlayer.playAtIndex(index);
+                }
+            });
+
+            const removeBtn = item.querySelector('.fs-queue-item-remove');
+            removeBtn?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.fsPlayer.removeFromQueue(index);
+                this.renderFullscreenQueue();
+            });
+        });
+    }
+
+    createQueueItemHTML(track, index, isCurrent) {
+        const coverUrl = this.api.getCoverUrl(track.album?.cover, '160');
+        const title = track.title || 'Unknown Title';
+        const artist = getTrackArtists(track);
+
+        return `
+            <div class="fs-queue-item ${isCurrent ? 'current' : ''}" data-index="${index}">
+                <img class="fs-queue-item-cover" src="${coverUrl}" alt="" loading="lazy" />
+                <div class="fs-queue-item-info">
+                    <div class="fs-queue-item-title">${escapeHtml(title)}</div>
+                    <div class="fs-queue-item-artist">${escapeHtml(artist)}</div>
+                </div>
+                ${!isCurrent ? `
+                    <button class="fs-queue-item-remove" title="Remove from queue">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // Fullscreen Lyrics Panel Methods
+    toggleFullscreenLyrics() {
+        const panel = document.getElementById('fs-lyrics-panel');
+        if (panel) {
+            const isOpen = panel.classList.contains('open');
+            if (isOpen) {
+                this.closeFullscreenLyrics();
+            } else {
+                this.openFullscreenLyrics();
+            }
+        }
+    }
+
+    async openFullscreenLyrics() {
+        const panel = document.getElementById('fs-lyrics-panel');
+        const content = document.getElementById('fs-lyrics-content');
+        const lyricsToggleBtn = document.getElementById('toggle-fullscreen-lyrics-btn');
+
+        if (!panel || !content) return;
+
+        // Show loading state
+        content.innerHTML = `
+            <div class="fs-lyrics-loading">
+                <svg class="fs-lyrics-spinner" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+                <span>Loading lyrics...</span>
+            </div>
+        `;
+
+        panel.classList.add('open');
+        lyricsToggleBtn?.classList.add('active');
+
+        // Fetch lyrics
+        if (this.fsLyricsManager && this.fsCurrentTrack) {
+            try {
+                const lyricsData = await this.fsLyricsManager.fetchLyrics(this.fsCurrentTrack.id, this.fsCurrentTrack);
+
+                if (lyricsData && lyricsData.subtitles) {
+                    // Parse synced lyrics
+                    this.fsSyncedLyrics = this.fsLyricsManager.parseSyncedLyrics(lyricsData.subtitles);
+
+                    if (this.fsSyncedLyrics.length > 0) {
+                        this.renderSyncedLyrics();
+                        this.startLyricsSync();
+                    } else {
+                        // Plain lyrics fallback
+                        content.innerHTML = `<div class="fs-lyrics-plain">${escapeHtml(lyricsData.subtitles)}</div>`;
+                    }
+                } else {
+                    this.showLyricsUnavailable();
+                }
+            } catch (error) {
+                console.error('Error fetching lyrics:', error);
+                this.showLyricsUnavailable();
+            }
+        } else {
+            this.showLyricsUnavailable();
+        }
+    }
+
+    closeFullscreenLyrics() {
+        const panel = document.getElementById('fs-lyrics-panel');
+        const lyricsToggleBtn = document.getElementById('toggle-fullscreen-lyrics-btn');
+
+        if (panel) {
+            panel.classList.remove('open');
+        }
+        lyricsToggleBtn?.classList.remove('active');
+
+        this.stopLyricsSync();
+    }
+
+    renderSyncedLyrics() {
+        const content = document.getElementById('fs-lyrics-content');
+        if (!content || !this.fsSyncedLyrics) return;
+
+        content.innerHTML = this.fsSyncedLyrics
+            .map((line, index) => `
+                <div class="fs-lyrics-line" data-index="${index}" data-time="${line.time}">
+                    ${escapeHtml(line.text)}
+                </div>
+            `)
+            .join('');
+
+        // Add click handlers for seeking
+        content.querySelectorAll('.fs-lyrics-line').forEach(line => {
+            line.addEventListener('click', () => {
+                const time = parseFloat(line.dataset.time);
+                if (this.fsAudioPlayer && !isNaN(time)) {
+                    this.fsAudioPlayer.currentTime = time;
+                }
+            });
+        });
+    }
+
+    showLyricsUnavailable() {
+        const content = document.getElementById('fs-lyrics-content');
+        if (!content) return;
+
+        content.innerHTML = `
+            <div class="fs-lyrics-unavailable">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                </svg>
+                <p>Lyrics not available for this track</p>
+            </div>
+        `;
+    }
+
+    startLyricsSync() {
+        this.stopLyricsSync();
+
+        if (!this.fsAudioPlayer) return;
+
+        this.fsLyricsSyncHandler = () => {
+            this.updateLyricsHighlight();
+        };
+
+        this.fsAudioPlayer.addEventListener('timeupdate', this.fsLyricsSyncHandler);
+    }
+
+    stopLyricsSync() {
+        if (this.fsAudioPlayer && this.fsLyricsSyncHandler) {
+            this.fsAudioPlayer.removeEventListener('timeupdate', this.fsLyricsSyncHandler);
+            this.fsLyricsSyncHandler = null;
+        }
+    }
+
+    updateLyricsHighlight() {
+        if (!this.fsSyncedLyrics || !this.fsAudioPlayer) return;
+
+        const currentTime = this.fsAudioPlayer.currentTime;
+        const content = document.getElementById('fs-lyrics-content');
+        if (!content) return;
+
+        const lines = content.querySelectorAll('.fs-lyrics-line');
+        let activeIndex = -1;
+
+        // Find active line
+        for (let i = 0; i < this.fsSyncedLyrics.length; i++) {
+            if (currentTime >= this.fsSyncedLyrics[i].time) {
+                activeIndex = i;
+            } else {
+                break;
+            }
+        }
+
+        // Update classes
+        lines.forEach((line, index) => {
+            line.classList.remove('active', 'past');
+            if (index === activeIndex) {
+                line.classList.add('active');
+                // Scroll active line into view
+                if (this.fsLastActiveIndex !== activeIndex) {
+                    line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    this.fsLastActiveIndex = activeIndex;
+                }
+            } else if (index < activeIndex) {
+                line.classList.add('past');
+            }
+        });
+    }
+
+    syncFullscreenState() {
+        const playBtn = document.getElementById('fs-play-btn');
+        const shuffleBtn = document.getElementById('fs-shuffle-btn');
+        const repeatBtn = document.getElementById('fs-repeat-btn');
+        const likeBtn = document.getElementById('fs-like-btn');
+        const volumeSlider = document.getElementById('fs-volume-slider');
+        const volumeControl = document.getElementById('fs-volume-btn')?.closest('.fs-volume-control');
+
+        if (!this.fsPlayer) return;
+
+        // Sync play state
+        if (this.fsAudioPlayer && !this.fsAudioPlayer.paused) {
+            playBtn?.classList.add('playing');
+        } else {
+            playBtn?.classList.remove('playing');
+        }
+
+        // Sync shuffle state
+        if (this.fsPlayer.shuffleActive) {
+            shuffleBtn?.classList.add('active');
+        } else {
+            shuffleBtn?.classList.remove('active');
+        }
+
+        // Sync repeat state - 0=OFF, 1=ALL, 2=ONE
+        repeatBtn?.classList.remove('active', 'repeat-one');
+        if (this.fsPlayer.repeatMode === 1) {
+            // Repeat ALL
+            repeatBtn?.classList.add('active');
+            if (repeatBtn) repeatBtn.title = 'Repeat All';
+        } else if (this.fsPlayer.repeatMode === 2) {
+            // Repeat ONE
+            repeatBtn?.classList.add('active', 'repeat-one');
+            if (repeatBtn) repeatBtn.title = 'Repeat One';
+        } else {
+            // Repeat OFF
+            if (repeatBtn) repeatBtn.title = 'Repeat';
+        }
+
+        // Sync volume
+        if (this.fsAudioPlayer && volumeSlider) {
+            volumeSlider.value = this.fsAudioPlayer.volume * 100;
+            volumeControl?.classList.toggle('muted', this.fsAudioPlayer.volume === 0);
+        }
+
+        // Check like status
+        if (this.fsCurrentTrack && likeBtn) {
+            import('./db.js').then(({ db }) => {
+                db.isFavorite('track', this.fsCurrentTrack.id).then(isLiked => {
+                    likeBtn.classList.toggle('liked', isLiked);
+                });
+            });
+        }
+    }
+
+    updateFullscreenProgress(currentTime, duration) {
+        const progressBar = document.getElementById('fs-progress-bar');
+        const currentTimeEl = document.getElementById('fs-current-time');
+        const durationEl = document.getElementById('fs-duration');
+
+        if (progressBar && duration > 0) {
+            const percent = (currentTime / duration) * 100;
+            progressBar.style.width = `${percent}%`;
+        }
+
+        if (currentTimeEl) {
+            currentTimeEl.textContent = formatTime(currentTime);
+        }
+
+        if (durationEl && duration > 0) {
+            durationEl.textContent = formatTime(duration);
+        }
+    }
+
+    updateFullscreenPlayState(isPlaying) {
+        const playBtn = document.getElementById('fs-play-btn');
+        if (playBtn) {
+            playBtn.classList.toggle('playing', isPlaying);
+        }
     }
 
     closeFullscreenCover() {
         const overlay = document.getElementById('fullscreen-cover-overlay');
         overlay.style.display = 'none';
+        // Also close the queue and lyrics panels if open
+        this.closeFullscreenQueue();
+        this.closeFullscreenLyrics();
     }
 
     showPage(pageId) {
