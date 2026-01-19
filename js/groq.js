@@ -5,15 +5,40 @@ export class GroqService {
         this.model = 'llama-3.1-8b-instant';
     }
 
+    isValidApiKey(key) {
+        // Check if key exists and is not a placeholder value
+        if (!key) return false;
+        const placeholders = ['your_groq_api_key', 'your_api_key', 'api_key_here', 'xxx', ''];
+        if (placeholders.some(p => key.toLowerCase().includes(p))) return false;
+        // Groq API keys typically start with 'gsk_' and are reasonably long
+        if (key.length < 20) return false;
+        return true;
+    }
+
     getApiKey() {
-        let key = import.meta.env.VITE_GROQ_API_KEY || localStorage.getItem('groq_api_key');
-        if (!key) {
-            key = prompt('Enter your Groq API Key to enable Smart Shuffle recommendations:');
-            if (key) {
+        let key = import.meta.env.VITE_GROQ_API_KEY;
+
+        // Check if env key is valid, otherwise try localStorage
+        if (!this.isValidApiKey(key)) {
+            key = localStorage.getItem('groq_api_key');
+        }
+
+        // If still no valid key, prompt user
+        if (!this.isValidApiKey(key)) {
+            key = prompt('Enter your Groq API Key to enable Smart Shuffle recommendations:\n\nGet your free API key at: https://console.groq.com/keys');
+            if (key && this.isValidApiKey(key)) {
                 localStorage.setItem('groq_api_key', key);
+            } else if (key) {
+                // User entered something but it looks invalid
+                alert('The API key you entered appears to be invalid. Please check and try again.');
+                return null;
             }
         }
         return key;
+    }
+
+    clearApiKey() {
+        localStorage.removeItem('groq_api_key');
     }
 
     async getRecommendations(lastPlayed, currentContext, count = 5) {
@@ -58,6 +83,11 @@ Example: [{"title": "Song", "artist": "Artist"}]
 
             if (!response.ok) {
                 const err = await response.text();
+                // Clear stored key on authentication errors so user can re-enter
+                if (response.status === 401 || response.status === 403) {
+                    this.clearApiKey();
+                    throw new Error('Invalid API key. Please try again with a valid Groq API key.');
+                }
                 throw new Error(`Groq API Error: ${response.status} - ${err}`);
             }
 

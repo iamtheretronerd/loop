@@ -456,10 +456,12 @@ export class Player {
             this.smartShuffleActive = true;
             try {
                 await this.enableSmartShuffle();
+                showNotification('Smart Shuffle activated with AI recommendations!');
             } catch (error) {
                 console.error('Failed to enable smart shuffle:', error);
-                showNotification('Smart Shuffle failed. Check console.');
+                showNotification('Smart Shuffle failed: ' + error.message);
                 this.smartShuffleActive = false;
+                this.shuffleActive = false; // Return to off state on failure
             }
         } else {
             // SMART -> OFF

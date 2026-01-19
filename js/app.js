@@ -418,17 +418,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const { tracks } = await api.getAlbum(albumId);
                 if (tracks.length > 0) {
                     const mainShuffleBtn = document.getElementById('shuffle-btn');
-                    if (mainShuffleBtn) mainShuffleBtn.classList.add('active', 'smart');
-
                     const { showNotification } = await import('./downloads.js');
                     showNotification('Activating Smart Shuffle...');
 
                     try {
                         await player.startSmartShuffle(tracks);
+                        if (mainShuffleBtn) mainShuffleBtn.classList.add('active', 'smart');
+                        showNotification('Smart Shuffle activated with AI recommendations!');
+                        player.playAtIndex(0);
                     } catch (err) {
-                        console.error('Smart shuffle fetch failed', err);
+                        console.error('Smart shuffle failed', err);
+                        showNotification('Smart Shuffle failed: ' + err.message);
+                        // Don't play - let user retry
                     }
-                    player.playAtIndex(0);
                 }
             } catch (error) {
                 console.error('Failed to play album smart shuffle:', error);
@@ -918,17 +920,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const likedTracks = await db.getFavorites('track');
                 if (likedTracks.length > 0) {
                     const mainShuffleBtn = document.getElementById('shuffle-btn');
-                    if (mainShuffleBtn) mainShuffleBtn.classList.add('active', 'smart');
-
                     const { showNotification } = await import('./downloads.js');
                     showNotification('Activating Smart Shuffle...');
 
                     try {
                         await player.startSmartShuffle(likedTracks);
+                        if (mainShuffleBtn) mainShuffleBtn.classList.add('active', 'smart');
+                        showNotification('Smart Shuffle activated with AI recommendations!');
+                        player.playAtIndex(0);
                     } catch (err) {
-                        console.error('Smart shuffle fetch failed', err);
+                        console.error('Smart shuffle failed', err);
+                        showNotification('Smart Shuffle failed: ' + err.message);
+                        // Don't play - let user retry
                     }
-                    player.playAtIndex(0);
                 } else {
                     const { showNotification } = await import('./downloads.js');
                     showNotification('No liked tracks to shuffle.');

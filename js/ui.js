@@ -2497,15 +2497,19 @@ export class UIRenderer {
             '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg><span>Smart Shuffle</span>';
         smartShuffleBtn.onclick = async () => {
              const mainShuffleBtn = document.getElementById('shuffle-btn');
-             if (mainShuffleBtn) mainShuffleBtn.classList.add('active', 'smart');
-
              const { showNotification } = await import('./downloads.js');
              showNotification('Activating Smart Shuffle...');
 
              try {
                 await this.player.startSmartShuffle(tracks);
-             } catch (err) { console.error(err); }
-             this.player.playAtIndex(0);
+                if (mainShuffleBtn) mainShuffleBtn.classList.add('active', 'smart');
+                showNotification('Smart Shuffle activated with AI recommendations!');
+                this.player.playAtIndex(0);
+             } catch (err) {
+                console.error('Smart shuffle failed', err);
+                showNotification('Smart Shuffle failed: ' + err.message);
+                // Don't play - let user retry
+             }
         };
         fragment.appendChild(smartShuffleBtn);
 
