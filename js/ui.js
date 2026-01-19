@@ -2941,34 +2941,53 @@ export class UIRenderer {
             // Logged Out Design
             container.innerHTML = `
                <div class="auth-page-container">
-                    <div class="auth-header">
-                        <h1>Welcome to Loop</h1>
-                        <p>Sign in to sync your library across devices.</p>
-                    </div>
-                    
                     <div class="auth-card">
-                        <div class="auth-buttons">
-                             <button id="auth-google-btn" class="btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/></svg> 
-                                Continue with Google
-                             </button>
-                             <div style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
-                                <div style="flex: 1; height: 1px; background: var(--border);"></div>
-                                <span style="color: var(--text-secondary); font-size: 0.8rem;">OR</span>
-                                <div style="flex: 1; height: 1px; background: var(--border);"></div>
-                             </div>
-                             <button id="auth-email-toggle-btn" class="btn-secondary" style="width: 100%;">Continue with Email</button>
+                        <div class="auth-logo">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/>
+                            </svg>
+                        </div>
+                        <div class="auth-header">
+                            <h1>Welcome to Loop</h1>
+                            <p>Sign in to sync your library, playlists, and preferences across all your devices.</p>
                         </div>
 
-                         <div id="auth-email-form" style="display: none; margin-top: 1rem; flex-direction: column; gap: 1rem;">
-                            <input type="email" id="auth-email" class="template-input" placeholder="Email Address" />
-                            <input type="password" id="auth-password" class="template-input" placeholder="Password" />
-                            <div style="display: flex; gap: 10px;">
-                                <button id="auth-signin-btn" class="btn-primary" style="flex: 1">Sign In</button>
-                                <button id="auth-signup-btn" class="btn-secondary" style="flex: 1">Sign Up</button>
+                        <div class="auth-buttons">
+                             <button id="auth-google-btn" class="auth-btn auth-btn-google">
+                                <svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/></svg>
+                                <span>Continue with Google</span>
+                             </button>
+
+                             <div class="auth-divider">
+                                <span>or</span>
+                             </div>
+
+                             <button id="auth-email-toggle-btn" class="auth-btn auth-btn-email">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                                </svg>
+                                <span>Continue with Email</span>
+                             </button>
+                        </div>
+
+                        <div id="auth-email-form" class="auth-email-form">
+                            <input type="email" id="auth-email" class="auth-input" placeholder="Email address" autocomplete="email" />
+                            <input type="password" id="auth-password" class="auth-input" placeholder="Password" autocomplete="current-password" />
+                            <div class="auth-form-actions">
+                                <button id="auth-signin-btn" class="auth-btn auth-btn-primary">Sign In</button>
+                                <button id="auth-signup-btn" class="auth-btn auth-btn-secondary">Create Account</button>
                             </div>
-                            <button id="auth-email-cancel-btn" class="btn-text" style="width: 100%; margin-top: 5px; color: var(--text-secondary); background: none; border: none; cursor: pointer;">Cancel</button>
-                         </div>
+                            <button id="auth-email-cancel-btn" class="auth-btn-cancel">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m15 18-6-6 6-6"/>
+                                </svg>
+                                Back to options
+                            </button>
+                        </div>
+
+                        <p class="auth-footer">By continuing, you agree to Loop's Terms of Service and Privacy Policy.</p>
                     </div>
                </div>
             `;
@@ -2984,15 +3003,16 @@ export class UIRenderer {
             const passInput = container.querySelector('#auth-password');
 
             googleBtn.addEventListener('click', () => authManager.signInWithGoogle());
-            
+
             toggleBtn.addEventListener('click', () => {
-                authButtons.style.display = 'none';
-                emailForm.style.display = 'flex';
+                authButtons.classList.add('hidden');
+                emailForm.classList.add('visible');
+                emailInput.focus();
             });
-            
+
             cancelBtn.addEventListener('click', () => {
-                 emailForm.style.display = 'none';
-                 authButtons.style.display = 'flex';
+                emailForm.classList.remove('visible');
+                authButtons.classList.remove('hidden');
             });
             
             signinBtn.addEventListener('click', () => {
