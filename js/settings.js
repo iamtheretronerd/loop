@@ -21,7 +21,32 @@ import { syncManager } from './accounts/firestore.js';
 import { saveFirebaseConfig, clearFirebaseConfig } from './accounts/config.js';
 import { initializeTakeoutImport } from './takeout-import.js';
 
+function initSettingsNavigation() {
+    const navItems = document.querySelectorAll('.settings-nav-item');
+    const panels = document.querySelectorAll('.settings-panel');
+
+    if (!navItems.length || !panels.length) return;
+
+    navItems.forEach((item) => {
+        item.addEventListener('click', () => {
+            const section = item.dataset.section;
+
+            // Update nav active state
+            navItems.forEach((nav) => nav.classList.remove('active'));
+            item.classList.add('active');
+
+            // Update panel visibility
+            panels.forEach((panel) => {
+                panel.classList.toggle('active', panel.dataset.panel === section);
+            });
+        });
+    });
+}
+
 export function initializeSettings(scrobbler, player, api, ui) {
+    // Initialize Settings Navigation (iPadOS-style)
+    initSettingsNavigation();
+
     // Initialize account system UI & Settings
     authManager.updateUI(authManager.user);
 
@@ -191,11 +216,12 @@ export function initializeSettings(scrobbler, player, api, ui) {
         lastFMStorage.setLoveOnLike(e.target.checked);
     });
 
-    // Theme picker
+    // Theme picker - supports both .theme-btn (new) and .theme-option (legacy)
     const themePicker = document.getElementById('theme-picker');
     const currentTheme = themeManager.getTheme();
+    const themeButtons = themePicker?.querySelectorAll('.theme-btn, .theme-option') || [];
 
-    themePicker.querySelectorAll('.theme-option').forEach((option) => {
+    themeButtons.forEach((option) => {
         if (option.dataset.theme === currentTheme) {
             option.classList.add('active');
         }
@@ -203,15 +229,15 @@ export function initializeSettings(scrobbler, player, api, ui) {
         option.addEventListener('click', () => {
             const theme = option.dataset.theme;
 
-            themePicker.querySelectorAll('.theme-option').forEach((opt) => opt.classList.remove('active'));
+            themeButtons.forEach((opt) => opt.classList.remove('active'));
             option.classList.add('active');
 
             if (theme === 'custom') {
-                document.getElementById('custom-theme-editor').classList.add('show');
+                document.getElementById('custom-theme-editor')?.classList.add('show');
                 renderCustomThemeEditor();
                 themeManager.setTheme('custom');
             } else {
-                document.getElementById('custom-theme-editor').classList.remove('show');
+                document.getElementById('custom-theme-editor')?.classList.remove('show');
                 themeManager.setTheme(theme);
             }
         });
@@ -253,14 +279,16 @@ export function initializeSettings(scrobbler, player, api, ui) {
         renderCustomThemeEditor();
     });
 
-    // Accent Color Picker
+    // Accent Color Picker - supports both .accent-btn (new) and .accent-option (legacy)
     const accentPicker = document.getElementById('accent-color-picker');
     const accentCustomInput = document.getElementById('accent-custom-color');
 
     if (accentPicker) {
+        const accentButtons = accentPicker.querySelectorAll('.accent-btn, .accent-option');
+
         // Set initial active state
         const currentAccent = accentColorSettings.getMode();
-        accentPicker.querySelectorAll('.accent-option').forEach((option) => {
+        accentButtons.forEach((option) => {
             option.classList.toggle('active', option.dataset.accent === currentAccent);
         });
 
@@ -275,7 +303,7 @@ export function initializeSettings(scrobbler, player, api, ui) {
         }
 
         accentPicker.addEventListener('click', (e) => {
-            const option = e.target.closest('.accent-option');
+            const option = e.target.closest('.accent-btn, .accent-option');
             if (!option) return;
 
             const accent = option.dataset.accent;
@@ -285,7 +313,7 @@ export function initializeSettings(scrobbler, player, api, ui) {
                 return;
             }
 
-            accentPicker.querySelectorAll('.accent-option').forEach((opt) => opt.classList.remove('active'));
+            accentButtons.forEach((opt) => opt.classList.remove('active'));
             option.classList.add('active');
 
             accentColorSettings.setMode(accent);
@@ -296,11 +324,15 @@ export function initializeSettings(scrobbler, player, api, ui) {
                 const color = e.target.value;
                 accentColorSettings.setCustomColor(color);
 
-                // Auto-select custom option when color is picked
-                accentPicker.querySelectorAll('.accent-option').forEach((opt) => opt.classList.remove('active'));
-                accentCustomInput.closest('.accent-option').classList.add('active');
+                // Auto-select custom when color is picked
+                accentButtons.forEach((opt) => opt.classList.remove('active'));
+                const customBtn = accentPicker.querySelector('[data-accent="custom"]');
+                customBtn?.classList.add('active');
                 accentColorSettings.setMode('custom');
             });
+
+            // Prevent click from bubbling to prevent double-handling
+            accentCustomInput.addEventListener('click', (e) => e.stopPropagation());
         }
     }
 

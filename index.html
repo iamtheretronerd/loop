@@ -507,14 +507,8 @@
             <nav class="top-nav" id="top-nav">
                 <div class="top-nav-left">
                     <a href="#home" class="top-nav-logo" aria-label="Loop Music">
-
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 28" class="loop-logo">
-                            <style>text { font-family: 'Montserrat', sans-serif; font-weight: 300; fill: currentColor; }</style>
-                            <text x="0" y="22" font-size="22">L</text>
-                            <text x="12" y="22" font-size="22">O</text>
-                            <rect x="32" y="7" width="24" height="14" rx="7" ry="7" fill="none" stroke="currentColor" stroke-width="1.8"/>
-                            <text x="60" y="22" font-size="22">P</text>
-                        </svg>
+                        <img src="./assets/loop-light.png" alt="Loop" class="logo-img logo-light" />
+                        <img src="./assets/loop-dark.png" alt="Loop" class="logo-img logo-dark" />
                     </a>
                     <!-- Navigation links - hidden on mobile -->
                     <a href="#home" class="top-nav-btn" data-nav="home" data-tooltip="Home">
@@ -1294,430 +1288,356 @@
                 </div>
 
                 <div id="page-settings" class="page settings-page">
-                    <div class="settings-header">
-                        <h1>Settings</h1>
-                        <p>Customize your experience</p>
-                    </div>
+                    <div class="settings-layout">
+                        <!-- Sidebar Navigation -->
+                        <nav class="settings-nav">
+                            <h1 class="settings-nav-title">Settings</h1>
+                            <ul class="settings-nav-list">
+                                <li><button class="settings-nav-item active" data-section="appearance">Appearance</button></li>
+                                <li><button class="settings-nav-item" data-section="playback">Playback</button></li>
+                                <li><button class="settings-nav-item" data-section="display">Display</button></li>
+                                <li><button class="settings-nav-item" data-section="downloads">Downloads</button></li>
+                                <li><button class="settings-nav-item" data-section="connections">Connections</button></li>
+                                <li><button class="settings-nav-item" data-section="storage">Storage</button></li>
+                                <li><button class="settings-nav-item" data-section="import">Import</button></li>
+                                <li><button class="settings-nav-item" data-section="api">API Instances</button></li>
+                                <li><button class="settings-nav-item" data-section="about">About</button></li>
+                            </ul>
+                        </nav>
 
-                    <div class="settings-grid">
-                        <!-- Appearance Card -->
-                        <div class="settings-card">
-                            <div class="settings-card-header">
-                                <div class="settings-card-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                                </div>
-                                <h3>Appearance</h3>
-                            </div>
-                            <div class="settings-card-content">
-                                <div class="setting-row column">
-                                    <span class="setting-label">Theme</span>
-                                    <div class="theme-picker" id="theme-picker">
-                                        <div class="theme-option" data-theme="system">
-                                            <div class="theme-preview theme-preview-system">
-                                                <div class="preview-sidebar"></div>
-                                                <div class="preview-content">
-                                                    <div class="preview-bar"></div>
-                                                    <div class="preview-cards">
-                                                        <div class="preview-card"></div>
-                                                        <div class="preview-card"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <span class="theme-name">System</span>
-                                        </div>
-                                        <div class="theme-option" data-theme="light">
-                                            <div class="theme-preview theme-preview-light">
-                                                <div class="preview-sidebar"></div>
-                                                <div class="preview-content">
-                                                    <div class="preview-bar"></div>
-                                                    <div class="preview-cards">
-                                                        <div class="preview-card"></div>
-                                                        <div class="preview-card"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <span class="theme-name">Light</span>
-                                        </div>
-                                        <div class="theme-option" data-theme="dark">
-                                            <div class="theme-preview theme-preview-dark">
-                                                <div class="preview-sidebar"></div>
-                                                <div class="preview-content">
-                                                    <div class="preview-bar"></div>
-                                                    <div class="preview-cards">
-                                                        <div class="preview-card"></div>
-                                                        <div class="preview-card"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <span class="theme-name">Dark</span>
-                                        </div>
-                                        <div class="theme-option" data-theme="monochrome">
-                                            <div class="theme-preview theme-preview-black">
-                                                <div class="preview-sidebar"></div>
-                                                <div class="preview-content">
-                                                    <div class="preview-bar"></div>
-                                                    <div class="preview-cards">
-                                                        <div class="preview-card"></div>
-                                                        <div class="preview-card"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <span class="theme-name">Black</span>
-                                        </div>
-                                        <div class="theme-option" data-theme="custom">
-                                            <div class="theme-preview theme-preview-custom">
-                                                <div class="preview-sidebar"></div>
-                                                <div class="preview-content">
-                                                    <div class="preview-bar"></div>
-                                                    <div class="preview-cards">
-                                                        <div class="preview-card"></div>
-                                                        <div class="preview-card"></div>
-                                                    </div>
-                                                </div>
-                                                <svg class="custom-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-                                            </div>
-                                            <span class="theme-name">Custom</span>
-                                        </div>
+                        <!-- Settings Content -->
+                        <div class="settings-content">
+                            <div class="settings-panel active" data-panel="appearance">
+                                <h2 class="settings-panel-title">Appearance</h2>
+                            <div class="settings-group">
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Theme</span>
+                                    </div>
+                                    <div class="theme-selector" id="theme-picker">
+                                        <button class="theme-btn" data-theme="system" title="System">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+                                        </button>
+                                        <button class="theme-btn" data-theme="light" title="Light">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                                        </button>
+                                        <button class="theme-btn" data-theme="dark" title="Dark">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                                        </button>
+                                        <button class="theme-btn" data-theme="monochrome" title="Black">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                                        </button>
+                                        <button class="theme-btn" data-theme="custom" title="Custom">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="custom-theme-editor" id="custom-theme-editor">
-                                    <h4>Custom Theme</h4>
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Custom Theme Colors</span>
+                                    </div>
                                     <div class="theme-color-grid" id="theme-color-grid"></div>
                                     <div class="theme-actions">
-                                        <button class="btn-secondary btn-sm" id="apply-custom-theme">Apply</button>
-                                        <button class="btn-secondary btn-sm" id="reset-custom-theme">Reset</button>
+                                        <button class="settings-btn" id="apply-custom-theme">Apply</button>
+                                        <button class="settings-btn" id="reset-custom-theme">Reset</button>
                                     </div>
                                 </div>
-                                <div class="setting-row column">
-                                    <span class="setting-label">Accent Color</span>
-                                    <div class="accent-color-picker" id="accent-color-picker">
-                                        <div class="accent-option active" data-accent="dynamic" title="Dynamic">
-                                            <span class="dynamic-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/></svg></span>
-                                        </div>
-                                        <div class="accent-option" data-accent="blue" style="background: #3b82f6"></div>
-                                        <div class="accent-option" data-accent="purple" style="background: #8b5cf6"></div>
-                                        <div class="accent-option" data-accent="pink" style="background: #ec4899"></div>
-                                        <div class="accent-option" data-accent="red" style="background: #ef4444"></div>
-                                        <div class="accent-option" data-accent="orange" style="background: #f97316"></div>
-                                        <div class="accent-option" data-accent="green" style="background: #22c55e"></div>
-                                        <div class="accent-option" data-accent="teal" style="background: #14b8a6"></div>
-                                        <div class="accent-option" data-accent="white" style="background: #ffffff"></div>
-                                        <div class="accent-option" data-accent="custom"><input type="color" id="accent-custom-color" value="#3b82f6" /></div>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Accent Color</span>
+                                    </div>
+                                    <div class="accent-picker" id="accent-color-picker">
+                                        <button class="accent-btn active" data-accent="dynamic" title="Dynamic"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20"/></svg></button>
+                                        <button class="accent-btn" data-accent="blue" style="--accent: #3b82f6"></button>
+                                        <button class="accent-btn" data-accent="purple" style="--accent: #8b5cf6"></button>
+                                        <button class="accent-btn" data-accent="pink" style="--accent: #ec4899"></button>
+                                        <button class="accent-btn" data-accent="red" style="--accent: #ef4444"></button>
+                                        <button class="accent-btn" data-accent="orange" style="--accent: #f97316"></button>
+                                        <button class="accent-btn" data-accent="green" style="--accent: #22c55e"></button>
+                                        <button class="accent-btn" data-accent="teal" style="--accent: #14b8a6"></button>
+                                        <label class="accent-btn accent-custom-wrap" data-accent="custom" title="Custom">
+                                            <input type="color" id="accent-custom-color" class="accent-custom" value="#3b82f6" />
+                                        </label>
                                     </div>
                                 </div>
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Album Cover Background</span><span class="setting-desc">Blurred album art as page background</span></div>
-                                    <label class="toggle-switch"><input type="checkbox" id="album-background-toggle" /><span class="slider"></span></label>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Album Art Background</span>
+                                        <span class="settings-item-desc">Use blurred album art as background</span>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" id="album-background-toggle" /><span></span></label>
                                 </div>
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Waveform Seekbar</span><span class="setting-desc">Show waveform in progress bar</span></div>
-                                    <label class="toggle-switch"><input type="checkbox" id="waveform-toggle" /><span class="slider"></span></label>
-                                </div>
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Smooth Scrolling</span><span class="setting-desc">Enhanced scroll with Lenis</span></div>
-                                    <label class="toggle-switch"><input type="checkbox" id="smooth-scrolling-toggle" /><span class="slider"></span></label>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Waveform Seekbar</span>
+                                        <span class="settings-item-desc">Show audio waveform in progress bar</span>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" id="waveform-toggle" /><span></span></label>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Audio Quality Card -->
-                        <div class="settings-card">
-                            <div class="settings-card-header">
-                                <div class="settings-card-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-                                </div>
-                                <h3>Audio</h3>
-                            </div>
-                            <div class="settings-card-content">
-                                <div class="setting-row">
-                                    <span class="setting-label">Streaming Quality</span>
-                                    <select id="streaming-quality-setting" class="setting-select">
-                                        <option value="HI_RES_LOSSLESS">Hi-Res FLAC (24-bit)</option>
-                                        <option value="LOSSLESS">FLAC (Lossless)</option>
-                                        <option value="HIGH">AAC 320kbps</option>
-                                        <option value="LOW">AAC 96kbps</option>
+                        <div class="settings-panel" data-panel="playback">
+                            <h2 class="settings-panel-title">Playback</h2>
+                            <div class="settings-group">
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Streaming Quality</span>
+                                    </div>
+                                    <select id="streaming-quality-setting" class="settings-select">
+                                        <option value="HI_RES_LOSSLESS">Hi-Res (24-bit FLAC)</option>
+                                        <option value="LOSSLESS">Lossless (FLAC)</option>
+                                        <option value="HIGH">High (320kbps)</option>
+                                        <option value="LOW">Normal (96kbps)</option>
                                     </select>
                                 </div>
-                                <div class="setting-row">
-                                    <span class="setting-label">Download Quality</span>
-                                    <select id="download-quality-setting" class="setting-select">
-                                        <option value="HI_RES_LOSSLESS">Hi-Res FLAC (24-bit)</option>
-                                        <option value="LOSSLESS">FLAC (Lossless)</option>
-                                        <option value="HIGH">AAC 320kbps</option>
-                                        <option value="LOW">AAC 96kbps</option>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Download Quality</span>
+                                    </div>
+                                    <select id="download-quality-setting" class="settings-select">
+                                        <option value="HI_RES_LOSSLESS">Hi-Res (24-bit FLAC)</option>
+                                        <option value="LOSSLESS">Lossless (FLAC)</option>
+                                        <option value="HIGH">High (320kbps)</option>
+                                        <option value="LOW">Normal (96kbps)</option>
                                     </select>
                                 </div>
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Quality Badges</span><span class="setting-desc">Show HR badge for Hi-Res</span></div>
-                                    <label class="toggle-switch"><input type="checkbox" id="show-quality-badges-toggle" checked /><span class="slider"></span></label>
-                                </div>
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Gapless Playback</span><span class="setting-desc">No gaps between tracks</span></div>
-                                    <label class="toggle-switch"><input type="checkbox" checked /><span class="slider"></span></label>
-                                </div>
-                                <div class="setting-row">
-                                    <span class="setting-label">ReplayGain Mode</span>
-                                    <select id="replay-gain-mode" class="setting-select">
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Volume Normalization</span>
+                                        <span class="settings-item-desc">ReplayGain mode</span>
+                                    </div>
+                                    <select id="replay-gain-mode" class="settings-select">
                                         <option value="off">Off</option>
                                         <option value="track">Track</option>
                                         <option value="album">Album</option>
                                     </select>
                                 </div>
-                                <div class="setting-row">
-                                    <span class="setting-label">ReplayGain Pre-Amp</span>
-                                    <input type="number" id="replay-gain-preamp" value="3" step="0.5" class="setting-input-sm" />
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Show Quality Badges</span>
+                                        <span class="settings-item-desc">Display Hi-Res indicators</span>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" id="show-quality-badges-toggle" checked /><span></span></label>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Last.fm Card -->
-                        <div class="settings-card">
-                            <div class="settings-card-header">
-                                <div class="settings-card-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
-                                </div>
-                                <h3>Last.fm</h3>
-                            </div>
-                            <div class="settings-card-content">
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Scrobbling</span><span class="setting-desc" id="lastfm-status">Connect to scrobble tracks</span></div>
-                                    <div id="lastfm-controls"><button id="lastfm-connect-btn" class="btn-secondary btn-sm">Connect</button></div>
-                                </div>
-                                <div class="setting-row" id="lastfm-toggle-setting" style="display: none">
-                                    <div><span class="setting-label">Enable Scrobbling</span><span class="setting-desc">Auto-scrobble played tracks</span></div>
-                                    <label class="toggle-switch"><input type="checkbox" id="lastfm-toggle" /><span class="slider"></span></label>
-                                </div>
-                                <div class="setting-row" id="lastfm-love-setting" style="display: none">
-                                    <div><span class="setting-label">Love on Like</span><span class="setting-desc">Love tracks when you like them</span></div>
-                                    <label class="toggle-switch"><input type="checkbox" id="lastfm-love-toggle" /><span class="slider"></span></label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Interface Card -->
-                        <div class="settings-card">
-                            <div class="settings-card-header">
-                                <div class="settings-card-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                                </div>
-                                <h3>Interface</h3>
-                            </div>
-                            <div class="settings-card-content">
-                                <div class="setting-row">
-                                    <span class="setting-label">Now Playing Action</span>
-                                    <select id="now-playing-mode" class="setting-select">
-                                        <option value="album">Show Album</option>
+                        <div class="settings-panel" data-panel="display">
+                            <h2 class="settings-panel-title">Display</h2>
+                            <div class="settings-group">
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Now Playing Click</span>
+                                    </div>
+                                    <select id="now-playing-mode" class="settings-select">
+                                        <option value="album">Go to Album</option>
                                         <option value="cover">Fullscreen</option>
-                                        <option value="lyrics">Lyrics</option>
+                                        <option value="lyrics">Show Lyrics</option>
                                     </select>
                                 </div>
-                                <div class="setting-row">
-                                    <span class="setting-label">Track Actions</span>
-                                    <select id="track-list-actions-mode" class="setting-select">
-                                        <option value="dropdown">Dropdown</option>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Track Actions</span>
+                                    </div>
+                                    <select id="track-list-actions-mode" class="settings-select">
+                                        <option value="dropdown">Menu</option>
                                         <option value="inline">Inline</option>
                                     </select>
                                 </div>
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Compact Artists</span><span class="setting-desc">Horizontal artist cards</span></div>
-                                    <label class="toggle-switch"><input type="checkbox" id="compact-artist-toggle" /><span class="slider"></span></label>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Compact Artist Cards</span>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" id="compact-artist-toggle" /><span></span></label>
                                 </div>
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Compact Albums</span><span class="setting-desc">Horizontal album cards</span></div>
-                                    <label class="toggle-switch"><input type="checkbox" id="compact-album-toggle" /><span class="slider"></span></label>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Compact Album Cards</span>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" id="compact-album-toggle" /><span></span></label>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Downloads Card -->
-                        <div class="settings-card">
-                            <div class="settings-card-header">
-                                <div class="settings-card-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                                </div>
-                                <h3>Downloads</h3>
-                            </div>
-                            <div class="settings-card-content">
-                                <div class="setting-row">
-                                    <div><span class="setting-label">ZIP Downloads</span><span class="setting-desc">Bundle tracks in ZIP file</span></div>
-                                    <label class="toggle-switch"><input type="checkbox" id="zipped-bulk-downloads-toggle" checked /><span class="slider"></span></label>
-                                </div>
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Download Lyrics</span><span class="setting-desc">Include .lrc files</span></div>
-                                    <label class="toggle-switch"><input type="checkbox" id="download-lyrics-toggle" /><span class="slider"></span></label>
-                                </div>
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Romaji Lyrics</span><span class="setting-desc">Convert Japanese to Latin</span></div>
-                                    <label class="toggle-switch"><input type="checkbox" id="romaji-lyrics-toggle" /><span class="slider"></span></label>
-                                </div>
-                                <div class="setting-row column">
-                                    <span class="setting-label">Filename Template</span>
-                                    <input type="text" id="filename-template" class="template-input" placeholder="{trackNumber} - {artist} - {title}" />
-                                </div>
-                                <div class="setting-row column">
-                                    <span class="setting-label">ZIP Folder Template</span>
-                                    <input type="text" id="zip-folder-template" class="template-input" placeholder="{albumTitle} - {albumArtist}" />
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Smooth Scrolling</span>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" id="smooth-scrolling-toggle" /><span></span></label>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Data & Storage Card -->
-                        <div class="settings-card">
-                            <div class="settings-card-header">
-                                <div class="settings-card-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+                        <div class="settings-panel" data-panel="downloads">
+                            <h2 class="settings-panel-title">Downloads</h2>
+                            <div class="settings-group">
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Bundle as ZIP</span>
+                                        <span class="settings-item-desc">Compress multiple downloads</span>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" id="zipped-bulk-downloads-toggle" checked /><span></span></label>
                                 </div>
-                                <h3>Data & Storage</h3>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Include Lyrics</span>
+                                        <span class="settings-item-desc">Download .lrc files</span>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" id="download-lyrics-toggle" /><span></span></label>
+                                </div>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Romaji Lyrics</span>
+                                        <span class="settings-item-desc">Convert Japanese to Latin characters</span>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" id="romaji-lyrics-toggle" /><span></span></label>
+                                </div>
+                                <div class="settings-item column">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Filename Format</span>
+                                    </div>
+                                    <input type="text" id="filename-template" class="settings-input" placeholder="{trackNumber} - {artist} - {title}" />
+                                </div>
                             </div>
-                            <div class="settings-card-content">
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Cache</span><span class="setting-desc" id="cache-info">API response cache</span></div>
-                                    <button id="clear-cache-btn" class="btn-secondary btn-sm">Clear</button>
-                                </div>
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Backup & Restore</span><span class="setting-desc">Export/import library</span></div>
-                                    <div class="btn-group">
-                                        <button id="export-library-btn" class="btn-secondary btn-sm">Export</button>
-                                        <button id="import-library-btn" class="btn-secondary btn-sm">Import</button>
-                                        <input type="file" id="import-library-input" style="display: none" accept=".json" />
+                        </div>
+
+                        <div class="settings-panel" data-panel="connections">
+                            <h2 class="settings-panel-title">Connections</h2>
+                            <div class="settings-group">
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Last.fm Scrobbling</span>
+                                        <span class="settings-item-desc" id="lastfm-status">Not connected</span>
+                                    </div>
+                                    <div id="lastfm-controls">
+                                        <button id="lastfm-connect-btn" class="settings-btn">Connect</button>
                                     </div>
                                 </div>
-                                <div class="setting-row">
-                                    <div><span class="setting-label">Shortcuts</span><span class="setting-desc">View keyboard shortcuts</span></div>
-                                    <button id="show-shortcuts-btn" class="btn-secondary btn-sm">View</button>
+                                <div class="settings-item" id="lastfm-toggle-setting" style="display: none">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Enable Scrobbling</span>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" id="lastfm-toggle" /><span></span></label>
+                                </div>
+                                <div class="settings-item" id="lastfm-love-setting" style="display: none">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Love on Like</span>
+                                    </div>
+                                    <label class="toggle"><input type="checkbox" id="lastfm-love-toggle" /><span></span></label>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Google Takeout Import Card -->
-                        <div class="settings-card settings-card-wide" id="takeout-import-manager">
-                            <div class="settings-card-header">
-                                <div class="settings-card-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                        <div class="settings-panel" data-panel="storage">
+                            <h2 class="settings-panel-title">Storage</h2>
+                            <div class="settings-group">
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Clear Cache</span>
+                                        <span class="settings-item-desc" id="cache-info">Free up space</span>
+                                    </div>
+                                    <button id="clear-cache-btn" class="settings-btn">Clear</button>
                                 </div>
-                                <h3>Import from YouTube Music</h3>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Export Library</span>
+                                        <span class="settings-item-desc">Backup your data</span>
+                                    </div>
+                                    <button id="export-library-btn" class="settings-btn">Export</button>
+                                </div>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Import Library</span>
+                                        <span class="settings-item-desc">Restore from backup</span>
+                                    </div>
+                                    <button id="import-library-btn" class="settings-btn">Import</button>
+                                    <input type="file" id="import-library-input" style="display: none" accept=".json" />
+                                </div>
                             </div>
-                            <div class="settings-card-content">
-                                <p class="setting-desc">
-                                    Import your liked songs and playlists from YouTube Music using Google Takeout.
+                        </div>
+
+                        <div class="settings-panel" data-panel="import" id="takeout-import-manager">
+                            <h2 class="settings-panel-title">Import from YouTube Music</h2>
+                            <div class="settings-group">
+                                <p class="settings-section-desc">
+                                    Import your liked songs, playlists, and history using Google Takeout.
                                 </p>
-                                
-                                <!-- Collapsible Instructions -->
-                                <details class="takeout-instructions">
-                                    <summary class="takeout-instructions-toggle">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                                        How to download your data (click to expand)
-                                    </summary>
-                                    <div class="takeout-instructions-content">
-                                        <ol class="takeout-steps">
-                                            <li>
-                                                <strong>Go to Google Takeout:</strong>
-                                                <a href="https://takeout.google.com/" target="_blank" rel="noopener" class="text-link">takeout.google.com</a>
-                                            </li>
-                                            <li>
-                                                <strong>Click "Deselect all"</strong> at the top to uncheck all products
-                                            </li>
-                                            <li>
-                                                <strong>Scroll down and select "YouTube and YouTube Music"</strong>
-                                            </li>
-                                            <li>
-                                                <strong>Click "All YouTube data included"</strong> to customize
-                                            </li>
-                                            <li>
-                                                <strong>Select only what you need:</strong>
-                                                <ul class="takeout-substeps">
-                                                    <li>✓ <strong>history</strong> → exports as <code>watch-history.html</code></li>
-                                                    <li>✓ <strong>music-library-songs</strong> → exports as <code>music-library-songs.csv</code></li>
-                                                    <li>✓ <strong>playlists</strong> → exports as CSV files</li>
-                                                </ul>
-                                                <em>Uncheck videos, comments, etc. to reduce size</em>
-                                            </li>
-                                            <li>
-                                                <strong>Click "OK"</strong> then scroll down and click <strong>"Next step"</strong>
-                                            </li>
-                                            <li>
-                                                <strong>Choose file type:</strong> .zip, and frequency: "Export once"
-                                            </li>
-                                            <li>
-                                                <strong>Click "Create export"</strong> and wait for email (1-10 mins)
-                                            </li>
-                                            <li>
-                                                <strong>Download and extract</strong> the ZIP file
-                                            </li>
-                                            <li>
-                                                <strong>Find files in:</strong> <code>Takeout/YouTube and YouTube Music/</code>
-                                            </li>
-                                        </ol>
-                                        <p class="takeout-tip">
-                                            💡 <strong>File types:</strong> History is HTML, liked songs and playlists are CSV files.
-                                        </p>
-                                    </div>
+
+                                <details class="import-help">
+                                    <summary>How to get your data</summary>
+                                    <ol>
+                                        <li>Go to <a href="https://takeout.google.com/" target="_blank" rel="noopener">takeout.google.com</a></li>
+                                        <li>Click "Deselect all", then select only "YouTube and YouTube Music"</li>
+                                        <li>Click "All YouTube data included" and select: history, music-library-songs, playlists</li>
+                                        <li>Export as .zip, download and extract</li>
+                                    </ol>
                                 </details>
-                                
-                                <div class="takeout-import-section">
-                                    <div class="takeout-file-upload">
+
+                                <div class="import-controls">
+                                    <div class="import-file-row">
                                         <input type="file" id="takeout-file-input" accept=".json,.html,.csv" multiple hidden />
-                                        <button id="takeout-select-files-btn" class="btn-secondary">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                        <button id="takeout-select-files-btn" class="settings-btn">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
                                             Select Files
                                         </button>
-                                        <span id="takeout-files-selected" class="files-selected-text"></span>
+                                        <span id="takeout-files-selected" class="import-file-info"></span>
                                     </div>
-                                    
-                                    <p class="setting-desc" style="margin-top: 0.5rem; font-size: 0.75rem;">
-                                        Supported: <code>watch-history.html</code>, <code>music-library-songs.csv</code>, playlist CSV files
-                                    </p>
-                                    
-                                    <div class="takeout-options" style="margin-top: 1rem;">
-                                        <label class="setting-checkbox">
-                                            <input type="checkbox" id="takeout-import-history" checked />
-                                            <span>Import Watch/Listen History</span>
-                                        </label>
-                                        <label class="setting-checkbox">
-                                            <input type="checkbox" id="takeout-import-likes" checked />
-                                            <span>Import Liked Songs</span>
-                                        </label>
-                                        <label class="setting-checkbox">
-                                            <input type="checkbox" id="takeout-import-playlists" checked />
-                                            <span>Import Playlists</span>
-                                        </label>
+
+                                    <div class="import-options">
+                                        <label><input type="checkbox" id="takeout-import-history" checked /> History</label>
+                                        <label><input type="checkbox" id="takeout-import-likes" checked /> Liked Songs</label>
+                                        <label><input type="checkbox" id="takeout-import-playlists" checked /> Playlists</label>
                                     </div>
-                                    
-                                    <div class="takeout-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center;">
-                                        <button id="takeout-start-import-btn" class="btn-primary" disabled>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                                            Start Import
-                                        </button>
-                                        <span id="takeout-import-status" class="import-status-text"></span>
+
+                                    <div class="import-actions">
+                                        <button id="takeout-start-import-btn" class="settings-btn primary" disabled>Start Import</button>
+                                        <span id="takeout-import-status" class="import-status"></span>
                                     </div>
-                                    
-                                    <div id="takeout-progress-container" class="progress-container" style="display: none; margin-top: 1rem;">
-                                        <div class="progress-bar">
-                                            <div class="progress-fill" id="takeout-progress-fill" style="width: 0%"></div>
+
+                                    <div id="takeout-progress-container" class="import-progress" style="display: none;">
+                                        <div class="import-progress-bar">
+                                            <div class="import-progress-fill" id="takeout-progress-fill"></div>
                                         </div>
-                                        <div class="progress-text">
-                                            <span id="takeout-progress-text">Preparing...</span>
-                                        </div>
+                                        <span id="takeout-progress-text" class="import-progress-text"></span>
                                     </div>
-                                    
-                                    <div id="takeout-results" class="takeout-results" style="display: none; margin-top: 1rem;"></div>
+
+                                    <div id="takeout-results" class="import-results" style="display: none;"></div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- API Instances Card (Full Width) -->
-                        <div class="settings-card settings-card-wide" id="api-instance-manager">
-                            <div class="settings-card-header">
-                                <div class="settings-card-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>
+                        <div class="settings-panel" data-panel="api" id="api-instance-manager">
+                            <h2 class="settings-panel-title">API Instances</h2>
+                            <div class="settings-group">
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Speed Test</span>
+                                        <span class="settings-item-desc">Test all API instances</span>
+                                    </div>
+                                    <button id="refresh-speed-test-btn" class="settings-btn">Test</button>
                                 </div>
-                                <h3>API Instances</h3>
-                                <button id="refresh-speed-test-btn" class="btn-secondary btn-sm" style="margin-left: auto;">Refresh Speed Test</button>
                             </div>
-                            <div class="settings-card-content">
-                                <p class="setting-desc" style="margin-bottom: 1rem;">Manage and prioritize API instances. Automatically sorted by speed.</p>
+                            <div class="settings-group" style="margin-top: 1rem;">
                                 <ul id="api-instance-list" class="api-list"></ul>
                             </div>
+                        </div>
+
+                        <div class="settings-panel" data-panel="about">
+                            <h2 class="settings-panel-title">About</h2>
+                            <div class="settings-group">
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Keyboard Shortcuts</span>
+                                        <span class="settings-item-desc">View all available shortcuts</span>
+                                    </div>
+                                    <button id="show-shortcuts-btn" class="settings-btn">View</button>
+                                </div>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Version</span>
+                                    </div>
+                                    <span class="settings-item-value">1.0.0</span>
+                                </div>
+                            </div>
+                        </div>
                         </div>
                     </div>
                 </div>

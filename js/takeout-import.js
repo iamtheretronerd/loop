@@ -344,11 +344,12 @@ export class TakeoutImporter {
 
     /**
      * Search for a track on the streaming service by title/artist
+     * Uses multiple search strategies for better matching
      */
     async searchTrack(title, artist = '') {
         if (!title) return null;
         
-        // Clean up title - remove common YouTube suffixes
+        // Clean up title - remove common YouTube suffixes and noise
         let cleanTitle = title
             .replace(/\s*\(Official.*?\)/gi, '')
             .replace(/\s*\[Official.*?\]/gi, '')
@@ -358,27 +359,115 @@ export class TakeoutImporter {
             .replace(/\s*\[Audio.*?\]/gi, '')
             .replace(/\s*\(Music Video.*?\)/gi, '')
             .replace(/\s*\[Music Video.*?\]/gi, '')
+            .replace(/\s*\(Visualizer.*?\)/gi, '')
+            .replace(/\s*\[Visualizer.*?\]/gi, '')
+            .replace(/\s*\(HD.*?\)/gi, '')
+            .replace(/\s*\[HD.*?\]/gi, '')
+            .replace(/\s*\(HQ.*?\)/gi, '')
+            .replace(/\s*\[HQ.*?\]/gi, '')
             .replace(/\s*-\s*Topic$/i, '')
+            .replace(/\s*\|\s*.*$/i, '') // Remove everything after |
+            .replace(/\s*\/\/\s*.*$/i, '') // Remove everything after //
             .trim();
         
-        // Build search query
-        let query = cleanTitle;
-        if (artist && !cleanTitle.toLowerCase().includes(artist.toLowerCase())) {
-            query = `${artist} ${cleanTitle}`;
+        // Clean up artist name
+        let cleanArtist = (artist || '')
+            .replace(/\s*-\s*Topic$/i, '')
+            .replace(/\s*VEVO$/i, '')
+            .replace(/\s*Official$/i, '')
+            .trim();
+        
+        // Try multiple search strategies
+        const searchQueries = [];
+        
+        // Strategy 1: Artist + Title (most reliable)
+        if (cleanArtist && !cleanTitle.toLowerCase().includes(cleanArtist.toLowerCase())) {
+            searchQueries.push(`${cleanArtist} ${cleanTitle}`);
         }
         
-        try {
-            const results = await this.api.searchTracks(query, { limit: 5 });
+        // Strategy 2: Just the title (if it already contains artist)
+        searchQueries.push(cleanTitle);
+        
+        // Strategy 3: Title with first part only (before any dash or parenthesis)
+        const simplifiedTitle = cleanTitle.split(/\s*[-–—]\s*/)[0].trim();
+        if (simplifiedTitle !== cleanTitle && cleanArtist) {
+            searchQueries.push(`${cleanArtist} ${simplifiedTitle}`);
+        }
+        
+        // Remove duplicates
+        const uniqueQueries = [...new Set(searchQueries)];
+        
+        for (const query of uniqueQueries) {
+            if (!query || query.length < 2) continue;
             
-            if (results.items && results.items.length > 0) {
-                // Return best match (first result)
-                return results.items[0];
+            try {
+                const results = await this.api.searchTracks(query, { limit: 10 });
+                
+                if (results.items && results.items.length > 0) {
+                    // Try to find best match based on title/artist similarity
+                    const bestMatch = this.findBestMatch(results.items, cleanTitle, cleanArtist);
+                    if (bestMatch) {
+                        return bestMatch;
+                    }
+                    // Fallback to first result
+                    return results.items[0];
+                }
+            } catch (error) {
+                console.warn('Search failed for:', query, error.message);
             }
-        } catch (error) {
-            console.warn('Search failed for:', query, error);
+            
+            // Small delay between retries
+            await this.delay(50);
         }
         
         return null;
+    }
+
+    /**
+     * Find the best matching track from search results
+     */
+    findBestMatch(tracks, targetTitle, targetArtist) {
+        if (!tracks || tracks.length === 0) return null;
+        
+        const normalizeStr = (str) => (str || '').toLowerCase().replace(/[^\w\s]/g, '').trim();
+        const normTitle = normalizeStr(targetTitle);
+        const normArtist = normalizeStr(targetArtist);
+        
+        let bestScore = 0;
+        let bestTrack = null;
+        
+        for (const track of tracks) {
+            let score = 0;
+            
+            const trackTitle = normalizeStr(track.title);
+            const trackArtist = normalizeStr(
+                track.artist?.name || track.artists?.[0]?.name || ''
+            );
+            
+            // Exact title match
+            if (trackTitle === normTitle) {
+                score += 50;
+            } else if (trackTitle.includes(normTitle) || normTitle.includes(trackTitle)) {
+                score += 30;
+            }
+            
+            // Artist match
+            if (normArtist && trackArtist) {
+                if (trackArtist === normArtist) {
+                    score += 40;
+                } else if (trackArtist.includes(normArtist) || normArtist.includes(trackArtist)) {
+                    score += 20;
+                }
+            }
+            
+            if (score > bestScore) {
+                bestScore = score;
+                bestTrack = track;
+            }
+        }
+        
+        // Only return if we have a reasonable match (lowered threshold for better coverage)
+        return bestScore >= 20 ? bestTrack : null;
     }
 
     /**
@@ -410,9 +499,9 @@ export class TakeoutImporter {
             }
             
             try {
-                // Extract artist from subtitles if available
-                let artist = '';
-                if (item.subtitles && item.subtitles.length > 0) {
+                // Get artist from item - CSV data has it directly, JSON might have subtitles
+                let artist = item.artist || '';
+                if (!artist && item.subtitles && item.subtitles.length > 0) {
                     artist = item.subtitles[0].name || '';
                 }
                 
@@ -421,7 +510,7 @@ export class TakeoutImporter {
                 
                 if (track) {
                     results.tracks.push(track);
-                    
+
                     if (type === 'likes') {
                         // Add to liked songs
                         const added = await db.toggleFavorite('track', track);
@@ -431,6 +520,10 @@ export class TakeoutImporter {
                         } else {
                             results.skipped++; // Already liked
                         }
+                    } else if (type === 'history') {
+                        // Add to watch/listen history
+                        await db.addToHistory(track);
+                        results.imported++;
                     } else {
                         results.imported++;
                     }
@@ -497,9 +590,12 @@ export class TakeoutImporter {
         // Create playlist in database
         if (results.tracks.length > 0) {
             try {
+                // createPlaylist signature: (name, tracks = [], cover = '', description = '')
                 const newPlaylist = await db.createPlaylist(
                     playlistData.name,
-                    playlistData.description || `Imported from YouTube Music`
+                    [], // Start with empty tracks, we'll add them one by one
+                    '', // No cover
+                    playlistData.description || 'Imported from YouTube Music'
                 );
                 
                 // Add tracks to playlist
@@ -580,12 +676,8 @@ export class TakeoutImporter {
                 if (fileType === 'history' && importHistory) {
                     const items = await this.parseWatchHistory(content, file.name);
                     if (items.length > 0) {
-                        // Just collect unique tracks from history, don't import to likes
-                        results.history = {
-                            total: items.length,
-                            parsed: items.length,
-                            message: `Found ${items.length} items in watch history`
-                        };
+                        // Import history items to the database
+                        results.history = await this.importItems(items, 'history');
                     }
                 } else if (fileType === 'likes' && importLikes) {
                     const items = await this.parseLikedContent(content, file.name);
@@ -703,7 +795,7 @@ export function initializeTakeoutImport(api) {
         let html = '<h4 style="margin-bottom: 0.5rem;">Import Results</h4>';
         
         if (results.history) {
-            html += `<p>📜 History: ${results.history.message}</p>`;
+            html += `<p>📜 History: ${results.history.imported} imported, ${results.history.failed} not found${results.history.skipped ? `, ${results.history.skipped} skipped` : ''}</p>`;
         }
         
         if (results.likes) {
