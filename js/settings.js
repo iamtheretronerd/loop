@@ -19,6 +19,7 @@ import { db } from './db.js';
 import { authManager } from './accounts/auth.js';
 import { syncManager } from './accounts/firestore.js';
 import { saveFirebaseConfig, clearFirebaseConfig } from './accounts/config.js';
+import { initializeTakeoutImport } from './takeout-import.js';
 
 export function initializeSettings(scrobbler, player, api, ui) {
     // Initialize account system UI & Settings
@@ -650,4 +651,7 @@ export function initializeSettings(scrobbler, player, api, ui) {
             }
         });
     }
+
+    // Initialize Google Takeout Import
+    initializeTakeoutImport(api);
 }

@@ -1400,6 +1400,174 @@ body.has-page-background .track-item:hover {
     gap: 0.5rem;
 }
 
+/* Takeout Import Styles */
+.takeout-import-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.takeout-file-upload {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.takeout-file-upload .btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.files-selected-text {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+}
+
+.takeout-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.setting-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.setting-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.import-status-text {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+}
+
+.takeout-results {
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    font-size: 0.875rem;
+}
+
+.takeout-results h4 {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.takeout-results p {
+    margin: 0.25rem 0;
+    line-height: 1.5;
+}
+
+.takeout-results ul {
+    margin: 0.5rem 0 0 1.5rem;
+    padding: 0;
+}
+
+.takeout-results li {
+    margin: 0.25rem 0;
+}
+
+.text-link {
+    color: var(--primary);
+    text-decoration: underline;
+    transition: opacity var(--transition);
+}
+
+.text-link:hover {
+    opacity: 0.8;
+}
+
+/* Takeout Instructions Collapsible */
+.takeout-instructions {
+    margin: 1rem 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--secondary);
+}
+
+.takeout-instructions-toggle {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--primary);
+    user-select: none;
+    list-style: none;
+}
+
+.takeout-instructions-toggle::-webkit-details-marker {
+    display: none;
+}
+
+.takeout-instructions-toggle svg {
+    flex-shrink: 0;
+}
+
+.takeout-instructions[open] .takeout-instructions-toggle {
+    border-bottom: 1px solid var(--border);
+}
+
+.takeout-instructions-content {
+    padding: 1rem;
+}
+
+.takeout-steps {
+    margin: 0;
+    padding-left: 1.25rem;
+    line-height: 1.8;
+    font-size: 0.85rem;
+}
+
+.takeout-steps li {
+    margin-bottom: 0.5rem;
+}
+
+.takeout-steps li:last-child {
+    margin-bottom: 0;
+}
+
+.takeout-substeps {
+    margin: 0.5rem 0 0.5rem 1rem;
+    padding: 0;
+    list-style: none;
+    font-size: 0.8rem;
+}
+
+.takeout-substeps li {
+    margin-bottom: 0.25rem;
+}
+
+.takeout-tip {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: color-mix(in srgb, var(--primary), transparent 90%);
+    border-radius: var(--radius);
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+code {
+    background: var(--muted);
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-family: 'Courier New', monospace;
+}
+
 /* Legacy settings-list styles for backward compatibility */
 .settings-list {
     max-width: 800px;
@@ -3824,6 +3992,11 @@ img[src=''] {
 /* Default responsive classes */
 .mobile-only {
     display: none !important;
+}
+
+/* Hide mobile search overlay on desktop */
+.mobile-search-overlay {
+    display: none;
 }
 
 /* Mobile-specific overrides */

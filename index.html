@@ -391,6 +391,7 @@
             <nav class="top-nav" id="top-nav">
                 <div class="top-nav-left">
                     <a href="#home" class="top-nav-logo" aria-label="Loop Music">
+
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 28" class="loop-logo">
                             <style>text { font-family: 'Montserrat', sans-serif; font-weight: 300; fill: currentColor; }</style>
                             <text x="0" y="22" font-size="22">L</text>
@@ -1468,6 +1469,122 @@
                                 <div class="setting-row">
                                     <div><span class="setting-label">Shortcuts</span><span class="setting-desc">View keyboard shortcuts</span></div>
                                     <button id="show-shortcuts-btn" class="btn-secondary btn-sm">View</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Google Takeout Import Card -->
+                        <div class="settings-card settings-card-wide" id="takeout-import-manager">
+                            <div class="settings-card-header">
+                                <div class="settings-card-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                                </div>
+                                <h3>Import from YouTube Music</h3>
+                            </div>
+                            <div class="settings-card-content">
+                                <p class="setting-desc">
+                                    Import your liked songs and playlists from YouTube Music using Google Takeout.
+                                </p>
+                                
+                                <!-- Collapsible Instructions -->
+                                <details class="takeout-instructions">
+                                    <summary class="takeout-instructions-toggle">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                                        How to download your data (click to expand)
+                                    </summary>
+                                    <div class="takeout-instructions-content">
+                                        <ol class="takeout-steps">
+                                            <li>
+                                                <strong>Go to Google Takeout:</strong>
+                                                <a href="https://takeout.google.com/settings/takeout/custom/youtube" target="_blank" rel="noopener" class="text-link">takeout.google.com</a>
+                                            </li>
+                                            <li>
+                                                <strong>Deselect all products</strong> first (click "Deselect all" at top)
+                                            </li>
+                                            <li>
+                                                <strong>Select only "YouTube and YouTube Music"</strong>
+                                            </li>
+                                            <li>
+                                                <strong>Click "All YouTube data included"</strong> button to customize
+                                            </li>
+                                            <li>
+                                                <strong>Select ONLY these (to minimize file size):</strong>
+                                                <ul class="takeout-substeps">
+                                                    <li>✓ <strong>history</strong> → select "watch-history.json"</li>
+                                                    <li>✓ <strong>playlists</strong> → includes your playlists</li>
+                                                    <li>✓ <strong>likes</strong> → your liked videos/songs</li>
+                                                </ul>
+                                                <em>Uncheck everything else (videos, comments, etc.)</em>
+                                            </li>
+                                            <li>
+                                                <strong>Choose export format:</strong> Select <strong>JSON</strong> (not HTML)
+                                            </li>
+                                            <li>
+                                                <strong>Export settings:</strong> Choose ".zip" and smallest size (1 GB)
+                                            </li>
+                                            <li>
+                                                <strong>Create export</strong> and wait for email (usually 1-10 mins)
+                                            </li>
+                                            <li>
+                                                <strong>Download & extract</strong> the ZIP file
+                                            </li>
+                                            <li>
+                                                <strong>Select the JSON files below</strong> from the extracted folder
+                                            </li>
+                                        </ol>
+                                        <p class="takeout-tip">
+                                            💡 <strong>Tip:</strong> With only history, playlists, and likes selected, the file should be under 10 MB instead of several GB.
+                                        </p>
+                                    </div>
+                                </details>
+                                
+                                <div class="takeout-import-section">
+                                    <div class="takeout-file-upload">
+                                        <input type="file" id="takeout-file-input" accept=".json,.html" multiple hidden />
+                                        <button id="takeout-select-files-btn" class="btn-secondary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                            Select JSON Files
+                                        </button>
+                                        <span id="takeout-files-selected" class="files-selected-text"></span>
+                                    </div>
+                                    
+                                    <p class="setting-desc" style="margin-top: 0.5rem; font-size: 0.75rem;">
+                                        Look for: <code>watch-history.json</code>, <code>liked videos.json</code>, or playlist files
+                                    </p>
+                                    
+                                    <div class="takeout-options" style="margin-top: 1rem;">
+                                        <label class="setting-checkbox">
+                                            <input type="checkbox" id="takeout-import-history" checked />
+                                            <span>Import Watch/Listen History</span>
+                                        </label>
+                                        <label class="setting-checkbox">
+                                            <input type="checkbox" id="takeout-import-likes" checked />
+                                            <span>Import Liked Songs</span>
+                                        </label>
+                                        <label class="setting-checkbox">
+                                            <input type="checkbox" id="takeout-import-playlists" checked />
+                                            <span>Import Playlists</span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="takeout-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center;">
+                                        <button id="takeout-start-import-btn" class="btn-primary" disabled>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                                            Start Import
+                                        </button>
+                                        <span id="takeout-import-status" class="import-status-text"></span>
+                                    </div>
+                                    
+                                    <div id="takeout-progress-container" class="progress-container" style="display: none; margin-top: 1rem;">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" id="takeout-progress-fill" style="width: 0%"></div>
+                                        </div>
+                                        <div class="progress-text">
+                                            <span id="takeout-progress-text">Preparing...</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="takeout-results" class="takeout-results" style="display: none; margin-top: 1rem;"></div>
                                 </div>
                             </div>
                         </div>
