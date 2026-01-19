@@ -252,11 +252,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const nowPlayingBar = document.querySelector('.now-playing-bar');
     if (nowPlayingBar) {
         createGlassSurface(nowPlayingBar, {
-            borderRadius: 16,
+            borderRadius: 22,
             brightness: 45,
             opacity: 0.9,
-            blur: 15,
-            backdropBlur: 10,
+            blur: 10,
+            backdropBlur: 15,
             backgroundOpacity: 0.1,
             saturation: 1.2
         });
