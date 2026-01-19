@@ -1612,60 +1612,60 @@
                                         <ol class="takeout-steps">
                                             <li>
                                                 <strong>Go to Google Takeout:</strong>
-                                                <a href="https://takeout.google.com/settings/takeout/custom/youtube" target="_blank" rel="noopener" class="text-link">takeout.google.com</a>
+                                                <a href="https://takeout.google.com/" target="_blank" rel="noopener" class="text-link">takeout.google.com</a>
                                             </li>
                                             <li>
-                                                <strong>Deselect all products</strong> first (click "Deselect all" at top)
+                                                <strong>Click "Deselect all"</strong> at the top to uncheck all products
                                             </li>
                                             <li>
-                                                <strong>Select only "YouTube and YouTube Music"</strong>
+                                                <strong>Scroll down and select "YouTube and YouTube Music"</strong>
                                             </li>
                                             <li>
-                                                <strong>Click "All YouTube data included"</strong> button to customize
+                                                <strong>Click "All YouTube data included"</strong> to customize
                                             </li>
                                             <li>
-                                                <strong>Select ONLY these (to minimize file size):</strong>
+                                                <strong>Select only what you need:</strong>
                                                 <ul class="takeout-substeps">
-                                                    <li>✓ <strong>history</strong> → select "watch-history.json"</li>
-                                                    <li>✓ <strong>playlists</strong> → includes your playlists</li>
-                                                    <li>✓ <strong>likes</strong> → your liked videos/songs</li>
+                                                    <li>✓ <strong>history</strong> → exports as <code>watch-history.html</code></li>
+                                                    <li>✓ <strong>music-library-songs</strong> → exports as <code>music-library-songs.csv</code></li>
+                                                    <li>✓ <strong>playlists</strong> → exports as CSV files</li>
                                                 </ul>
-                                                <em>Uncheck everything else (videos, comments, etc.)</em>
+                                                <em>Uncheck videos, comments, etc. to reduce size</em>
                                             </li>
                                             <li>
-                                                <strong>Choose export format:</strong> Select <strong>JSON</strong> (not HTML)
+                                                <strong>Click "OK"</strong> then scroll down and click <strong>"Next step"</strong>
                                             </li>
                                             <li>
-                                                <strong>Export settings:</strong> Choose ".zip" and smallest size (1 GB)
+                                                <strong>Choose file type:</strong> .zip, and frequency: "Export once"
                                             </li>
                                             <li>
-                                                <strong>Create export</strong> and wait for email (usually 1-10 mins)
+                                                <strong>Click "Create export"</strong> and wait for email (1-10 mins)
                                             </li>
                                             <li>
-                                                <strong>Download & extract</strong> the ZIP file
+                                                <strong>Download and extract</strong> the ZIP file
                                             </li>
                                             <li>
-                                                <strong>Select the JSON files below</strong> from the extracted folder
+                                                <strong>Find files in:</strong> <code>Takeout/YouTube and YouTube Music/</code>
                                             </li>
                                         </ol>
                                         <p class="takeout-tip">
-                                            💡 <strong>Tip:</strong> With only history, playlists, and likes selected, the file should be under 10 MB instead of several GB.
+                                            💡 <strong>File types:</strong> History is HTML, liked songs and playlists are CSV files.
                                         </p>
                                     </div>
                                 </details>
                                 
                                 <div class="takeout-import-section">
                                     <div class="takeout-file-upload">
-                                        <input type="file" id="takeout-file-input" accept=".json,.html" multiple hidden />
+                                        <input type="file" id="takeout-file-input" accept=".json,.html,.csv" multiple hidden />
                                         <button id="takeout-select-files-btn" class="btn-secondary">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                            Select JSON Files
+                                            Select Files
                                         </button>
                                         <span id="takeout-files-selected" class="files-selected-text"></span>
                                     </div>
                                     
                                     <p class="setting-desc" style="margin-top: 0.5rem; font-size: 0.75rem;">
-                                        Look for: <code>watch-history.json</code>, <code>liked videos.json</code>, or playlist files
+                                        Supported: <code>watch-history.html</code>, <code>music-library-songs.csv</code>, playlist CSV files
                                     </p>
                                     
                                     <div class="takeout-options" style="margin-top: 1rem;">

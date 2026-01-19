@@ -291,6 +291,7 @@ kbd {
 .top-nav-profile {
     position: relative;
     overflow: hidden;
+    border-radius: 50%;
 }
 
 .top-nav-profile .profile-avatar {

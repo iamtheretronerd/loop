@@ -70,6 +70,7 @@ export class TakeoutImporter {
 
     /**
      * Parse liked videos/songs from Takeout
+     * Supports JSON, HTML, and CSV formats
      */
     async parseLikedContent(content, filename) {
         const items = [];
@@ -83,6 +84,23 @@ export class TakeoutImporter {
                         items.push({
                             videoId,
                             title: item.snippet?.title || item.title?.replace('Liked ', '') || ''
+                        });
+                    }
+                }
+            } else if (filename.endsWith('.csv')) {
+                // Parse CSV format - YouTube Music library exports as CSV
+                const rows = this.parseCSV(content);
+                
+                for (const row of rows) {
+                    // YouTube Music CSV typically has: Title, Artist, Album, Playlist ID, etc.
+                    const title = row['Title'] || row['Song'] || row['Name'] || row[0];
+                    const artist = row['Artist'] || row['Channel'] || row[1];
+                    
+                    if (title && title !== 'Title') {
+                        items.push({
+                            title: title.trim(),
+                            artist: artist ? artist.trim() : '',
+                            album: row['Album'] || ''
                         });
                     }
                 }
@@ -110,6 +128,7 @@ export class TakeoutImporter {
 
     /**
      * Parse playlists from Takeout
+     * Supports JSON and CSV formats
      */
     async parsePlaylists(content, filename) {
         const playlists = [];
@@ -140,6 +159,66 @@ export class TakeoutImporter {
                             }
                         }
                         
+                        playlists.push(playlistData);
+                    }
+                }
+            } else if (filename.endsWith('.csv')) {
+                // Parse CSV format - YouTube Music playlist export
+                const rows = this.parseCSV(content);
+                
+                // Extract playlist name from filename if possible
+                // e.g., "My Playlist.csv" -> "My Playlist"
+                let playlistName = filename.replace('.csv', '').replace(/^.*[\\\/]/, '');
+                
+                // Check if CSV has a Playlist column
+                const hasPlaylistColumn = rows.length > 0 && (rows[0]['Playlist'] || rows[0]['Playlist Title']);
+                
+                if (hasPlaylistColumn) {
+                    // Group by playlist name
+                    const playlistGroups = {};
+                    
+                    for (const row of rows) {
+                        const pName = row['Playlist'] || row['Playlist Title'] || playlistName;
+                        const title = row['Title'] || row['Song'] || row['Name'] || row[0];
+                        const artist = row['Artist'] || row['Channel'] || row[1];
+                        
+                        if (title && title !== 'Title' && title !== 'Song' && title !== 'Name') {
+                            if (!playlistGroups[pName]) {
+                                playlistGroups[pName] = {
+                                    name: pName,
+                                    description: 'Imported from YouTube Music',
+                                    videos: []
+                                };
+                            }
+                            playlistGroups[pName].videos.push({
+                                title: title.trim(),
+                                artist: artist ? artist.trim() : ''
+                            });
+                        }
+                    }
+                    
+                    playlists.push(...Object.values(playlistGroups));
+                } else {
+                    // Single playlist file
+                    const playlistData = {
+                        name: playlistName,
+                        description: 'Imported from YouTube Music',
+                        videos: []
+                    };
+                    
+                    for (const row of rows) {
+                        const title = row['Title'] || row['Song'] || row['Name'] || row[0];
+                        const artist = row['Artist'] || row['Channel'] || row[1];
+                        
+                        if (title && title !== 'Title' && title !== 'Song' && title !== 'Name') {
+                            playlistData.videos.push({
+                                title: title.trim(),
+                                artist: artist ? artist.trim() : ''
+                            });
+                        }
+                    }
+                    
+                    if (playlistData.videos.length > 0) {
                         playlists.push(playlistData);
                     }
                 }
@@ -186,6 +265,81 @@ export class TakeoutImporter {
         // Try regex extraction
         const match = url.match(/(?:v=|\/)([\w-]{11})(?:\?|&|$)/);
         return match ? match[1] : null;
+    }
+
+    /**
+     * Parse CSV content into array of objects
+     * Handles quoted fields and escapes properly
+     */
+    parseCSV(content) {
+        const rows = [];
+        const lines = content.split(/\r?\n/);
+        
+        if (lines.length === 0) return rows;
+        
+        // Parse header row
+        const headers = this.parseCSVLine(lines[0]);
+        
+        // Parse data rows
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            const values = this.parseCSVLine(line);
+            const row = {};
+            
+            // Create object with headers as keys
+            for (let j = 0; j < headers.length; j++) {
+                row[headers[j]] = values[j] || '';
+                // Also store by index for fallback
+                row[j] = values[j] || '';
+            }
+            
+            rows.push(row);
+        }
+        
+        return rows;
+    }
+
+    /**
+     * Parse a single CSV line handling quoted fields
+     */
+    parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            const nextChar = line[i + 1];
+            
+            if (inQuotes) {
+                if (char === '"') {
+                    if (nextChar === '"') {
+                        // Escaped quote
+                        current += '"';
+                        i++;
+                    } else {
+                        // End of quoted field
+                        inQuotes = false;
+                    }
+                } else {
+                    current += char;
+                }
+            } else {
+                if (char === '"') {
+                    inQuotes = true;
+                } else if (char === ',') {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+        }
+        
+        result.push(current.trim());
+        return result;
     }
 
     /**
@@ -326,7 +480,7 @@ export class TakeoutImporter {
             }
             
             try {
-                const track = await this.searchTrack(video.title);
+                const track = await this.searchTrack(video.title, video.artist || '');
                 if (track) {
                     results.tracks.push(track);
                     results.imported++;
@@ -384,10 +538,12 @@ export class TakeoutImporter {
     detectFileType(filename) {
         const lower = filename.toLowerCase();
         
-        if (lower.includes('watch-history') || lower.includes('watch_history')) {
+        if (lower.includes('watch-history') || lower.includes('watch_history') || lower.includes('history')) {
             return 'history';
         }
-        if (lower.includes('liked') || lower.includes('like')) {
+        // "liked" songs, "library songs", "songs", "tracks"
+        if (lower.includes('liked') || lower.includes('like') || 
+            lower.includes('songs') || lower.includes('library') || lower.includes('tracks')) {
             return 'likes';
         }
         if (lower.includes('playlist')) {
