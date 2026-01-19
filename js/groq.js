@@ -8,7 +8,7 @@ export class GroqService {
     isValidApiKey(key) {
         // Check if key exists and is not a placeholder value
         if (!key) return false;
-        const placeholders = ['your_groq_api_key', 'your_api_key', 'api_key_here', 'xxx', ''];
+        const placeholders = ['your_groq_api_key', 'your_api_key', 'api_key_here'];
         if (placeholders.some(p => key.toLowerCase().includes(p))) return false;
         // Groq API keys typically start with 'gsk_' and are reasonably long
         if (key.length < 20) return false;
