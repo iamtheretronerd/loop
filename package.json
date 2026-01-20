@@ -17,15 +17,15 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/SamidyFR/monochrome.git"
+        "url": "git+https://github.com/iamtheretronerd/loop.git"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "bugs": {
-        "url": "https://github.com/SamidyFR/monochrome/issues"
+        "url": "https://github.com/iamtheretronerd/loop/issues"
     },
-    "homepage": "https://github.com/SamidyFR/monochrome#readme",
+    "homepage": "https://playonloop.vercel.app/",
     "devDependencies": {
         "eslint": "^9.39.2",
         "eslint-config-prettier": "^10.1.8",
