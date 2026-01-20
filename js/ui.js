@@ -772,9 +772,42 @@ export class UIRenderer {
         likeBtn?.addEventListener('click', async () => {
             if (this.fsCurrentTrack) {
                 const { db } = await import('./db.js');
-                await db.toggleFavorite('track', this.fsCurrentTrack);
-                const isLiked = await db.isFavorite('track', this.fsCurrentTrack.id);
-                likeBtn.classList.toggle('liked', isLiked);
+                const { syncManager } = await import('./accounts/firestore.js');
+                const { showNotification } = await import('./downloads.js');
+                
+                const added = await db.toggleFavorite('track', this.fsCurrentTrack);
+                syncManager.syncLibraryItem('track', this.fsCurrentTrack, added);
+                
+                // Update fullscreen like button
+                likeBtn.classList.toggle('liked', added);
+                
+                // Update now playing bar like button
+                const nowPlayingLikeBtn = document.getElementById('now-playing-like-btn');
+                if (nowPlayingLikeBtn) {
+                    nowPlayingLikeBtn.classList.toggle('active', added);
+                    const heartIcon = nowPlayingLikeBtn.querySelector('svg');
+                    if (heartIcon) {
+                        heartIcon.classList.toggle('filled', added);
+                        if (heartIcon.hasAttribute('fill')) {
+                            heartIcon.setAttribute('fill', added ? 'currentColor' : 'none');
+                        }
+                    }
+                }
+                
+                // Update any track list like buttons
+                const trackId = this.fsCurrentTrack.id;
+                document.querySelectorAll(`[data-track-id="${trackId}"] .like-btn`).forEach(btn => {
+                    btn.classList.toggle('active', added);
+                    const heartIcon = btn.querySelector('svg');
+                    if (heartIcon) {
+                        heartIcon.classList.toggle('filled', added);
+                        if (heartIcon.hasAttribute('fill')) {
+                            heartIcon.setAttribute('fill', added ? 'currentColor' : 'none');
+                        }
+                    }
+                });
+                
+                showNotification(added ? `Added to Liked: ${this.fsCurrentTrack.title}` : `Removed from Liked: ${this.fsCurrentTrack.title}`);
             }
         });
 
