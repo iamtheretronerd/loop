@@ -16,7 +16,7 @@ import {
     escapeHtml,
 } from './utils.js';
 import { openLyricsPanel } from './lyrics.js';
-import { recentActivityManager, backgroundSettings, trackListSettings, cardSettings, accentColorSettings } from './storage.js';
+import { recentActivityManager, backgroundSettings, trackListSettings, cardSettings, accentColorSettings, recommendationsCache } from './storage.js';
 import { db } from './db.js';
 import { getVibrantColorFromImage } from './vibrant-color.js';
 import { syncManager } from './accounts/firestore.js';
@@ -803,14 +803,33 @@ export class UIRenderer {
             volumeControl.classList.toggle('muted', value == 0);
         });
 
-        // Progress bar seeking
-        progressContainer?.addEventListener('click', (e) => {
+        // Progress bar seeking - support both click and touch for Safari
+        const seekToPosition = (clientX) => {
             if (this.fsAudioPlayer && this.fsAudioPlayer.duration) {
                 const rect = progressContainer.getBoundingClientRect();
-                const percent = (e.clientX - rect.left) / rect.width;
+                const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
                 this.fsAudioPlayer.currentTime = percent * this.fsAudioPlayer.duration;
             }
+        };
+        
+        progressContainer?.addEventListener('click', (e) => {
+            seekToPosition(e.clientX);
         });
+        
+        // Touch events for iOS Safari
+        progressContainer?.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                seekToPosition(e.touches[0].clientX);
+            }
+        }, { passive: false });
+        
+        progressContainer?.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                seekToPosition(e.touches[0].clientX);
+            }
+        }, { passive: false });
 
         // Lyrics toggle - open fullscreen lyrics panel
         lyricsToggleBtn?.addEventListener('click', () => {
@@ -1844,82 +1863,197 @@ export class UIRenderer {
 
     async renderHomeAlbums(forceRefresh = false) {
         const albumsContainer = document.getElementById('home-recommended-albums');
-        if (albumsContainer) {
-            if (forceRefresh) albumsContainer.innerHTML = this.createSkeletonCards(6);
-            else if (albumsContainer.children.length > 0 && !albumsContainer.querySelector('.skeleton')) return;
+        if (!albumsContainer) return;
+        
+        // Check if we should skip (already rendered and not forcing refresh)
+        if (!forceRefresh && albumsContainer.children.length > 0 && !albumsContainer.querySelector('.skeleton')) {
+            return;
+        }
+        
+        // Show skeletons or cached content first
+        const cached = recommendationsCache.get('albums');
+        if (forceRefresh) {
+            albumsContainer.innerHTML = this.createSkeletonCards(6);
+        } else if (cached && cached.items && cached.items.length > 0) {
+            // Show cached recommendations immediately
+            this._renderAlbumCards(albumsContainer, cached.items, !cached.isPersonalized);
+        } else {
+            albumsContainer.innerHTML = this.createSkeletonCards(6);
+        }
 
-            try {
-                const seeds = await this.getSeeds();
-                const albumSeed = seeds.find((t) => t.album && t.album.id);
-                if (albumSeed) {
-                    const similarAlbums = await this.api.getSimilarAlbums(albumSeed.album.id);
-                    const filteredAlbums = await this.filterUserContent(similarAlbums, 'album');
-
-                    if (filteredAlbums.length > 0) {
-                        albumsContainer.innerHTML = filteredAlbums
-                            .slice(0, 12)
-                            .map((a) => this.createAlbumCardHTML(a))
-                            .join('');
-                        filteredAlbums.slice(0, 12).forEach((a) => {
-                            const el = albumsContainer.querySelector(`[data-album-id="${a.id}"]`);
-                            if (el) {
-                                trackDataStore.set(el, a);
-                                this.updateLikeState(el, 'album', a.id);
-                            }
-                        });
-                    } else {
-                        albumsContainer.innerHTML = `<div style="grid-column: 1/-1; padding: 2rem 0;">${createPlaceholder('Tell us more about what you like so we can recommend albums!')}</div>`;
-                    }
+        try {
+            const seeds = await this.getSeeds();
+            const albumSeed = seeds.find((t) => t.album && t.album.id);
+            let albumsToShow = [];
+            let isPersonalized = true;
+            
+            if (albumSeed) {
+                const similarAlbums = await this.api.getSimilarAlbums(albumSeed.album.id);
+                albumsToShow = await this.filterUserContent(similarAlbums, 'album');
+            }
+            
+            // Fallback: If no personalized recommendations, try cached first, then search
+            if (albumsToShow.length === 0) {
+                isPersonalized = false;
+                
+                // Use cached if available and not expired
+                if (cached && cached.items && cached.items.length > 0) {
+                    albumsToShow = cached.items;
                 } else {
-                    albumsContainer.innerHTML = `<div style="grid-column: 1/-1; padding: 2rem 0;">${createPlaceholder('Tell us more about what you like so we can recommend albums!')}</div>`;
+                    // Search for popular albums
+                    const fallbackQueries = ['top hits 2024', 'best albums', 'popular music', 'new releases'];
+                    const randomQuery = fallbackQueries[Math.floor(Math.random() * fallbackQueries.length)];
+                    try {
+                        const searchResult = await this.api.searchAlbums(randomQuery, { limit: 15 });
+                        if (searchResult && searchResult.items) {
+                            albumsToShow = searchResult.items;
+                        }
+                    } catch (searchError) {
+                        console.warn('Fallback album search failed:', searchError);
+                    }
                 }
-            } catch (e) {
-                console.error(e);
+            }
+
+            if (albumsToShow.length > 0) {
+                // Check if different from cache before saving
+                if (!recommendationsCache.isSameAs('albums', albumsToShow)) {
+                    recommendationsCache.save('albums', albumsToShow, isPersonalized);
+                }
+                
+                // Render the albums with indicator if not personalized
+                this._renderAlbumCards(albumsContainer, albumsToShow.slice(0, 12), !isPersonalized);
+            } else {
+                albumsContainer.innerHTML = `<div style="grid-column: 1/-1; padding: 2rem 0;">${createPlaceholder('Unable to load albums. Try again later.')}</div>`;
+            }
+        } catch (e) {
+            console.error(e);
+            // If we have cached content, keep showing it
+            if (!cached || !cached.items || cached.items.length === 0) {
                 albumsContainer.innerHTML = createPlaceholder('Failed to load album recommendations.');
             }
         }
     }
+    
+    /**
+     * Helper to render album cards with optional trending indicator
+     */
+    _renderAlbumCards(container, albums, showTrendingIndicator = false) {
+        container.innerHTML = albums
+            .map((a) => {
+                const html = this.createAlbumCardHTML(a);
+                if (showTrendingIndicator) {
+                    // Add trending badge to the card
+                    return html.replace('class="card"', 'class="card trending-item"');
+                }
+                return html;
+            })
+            .join('');
+        
+        albums.forEach((a) => {
+            const el = container.querySelector(`[data-album-id="${a.id}"]`);
+            if (el) {
+                trackDataStore.set(el, a);
+                this.updateLikeState(el, 'album', a.id);
+            }
+        });
+    }
 
     async renderHomeArtists(forceRefresh = false) {
         const artistsContainer = document.getElementById('home-recommended-artists');
-        if (artistsContainer) {
-            if (forceRefresh) artistsContainer.innerHTML = this.createSkeletonCards(6, true);
-            else if (artistsContainer.children.length > 0 && !artistsContainer.querySelector('.skeleton')) return;
+        if (!artistsContainer) return;
+        
+        // Check if we should skip (already rendered and not forcing refresh)
+        if (!forceRefresh && artistsContainer.children.length > 0 && !artistsContainer.querySelector('.skeleton')) {
+            return;
+        }
+        
+        // Show skeletons or cached content first
+        const cached = recommendationsCache.get('artists');
+        if (forceRefresh) {
+            artistsContainer.innerHTML = this.createSkeletonCards(6, true);
+        } else if (cached && cached.items && cached.items.length > 0) {
+            // Show cached recommendations immediately
+            this._renderArtistCards(artistsContainer, cached.items, !cached.isPersonalized);
+        } else {
+            artistsContainer.innerHTML = this.createSkeletonCards(6, true);
+        }
 
-            try {
-                const seeds = await this.getSeeds();
-                const artistSeed = seeds.find((t) => (t.artist && t.artist.id) || (t.artists && t.artists.length > 0));
-                const artistId = artistSeed ? artistSeed.artist?.id || artistSeed.artists?.[0]?.id : null;
+        try {
+            const seeds = await this.getSeeds();
+            const artistSeed = seeds.find((t) => (t.artist && t.artist.id) || (t.artists && t.artists.length > 0));
+            const artistId = artistSeed ? artistSeed.artist?.id || artistSeed.artists?.[0]?.id : null;
+            let artistsToShow = [];
+            let isPersonalized = true;
 
-                if (artistId) {
-                    const similarArtists = await this.api.getSimilarArtists(artistId);
-                    const filteredArtists = await this.filterUserContent(similarArtists, 'artist');
-
-                    if (filteredArtists.length > 0) {
-                        artistsContainer.innerHTML = filteredArtists
-                            .slice(0, 12)
-                            .map((a) => this.createArtistCardHTML(a))
-                            .join('');
-                        filteredArtists.slice(0, 12).forEach((a) => {
-                            const el = artistsContainer.querySelector(`[data-artist-id="${a.id}"]`);
-                            if (el) {
-                                trackDataStore.set(el, a);
-                                this.updateLikeState(el, 'artist', a.id);
-                            }
-                        });
-                    } else {
-                        artistsContainer.innerHTML = createPlaceholder('No artist recommendations found.');
-                    }
+            if (artistId) {
+                const similarArtists = await this.api.getSimilarArtists(artistId);
+                artistsToShow = await this.filterUserContent(similarArtists, 'artist');
+            }
+            
+            // Fallback: If no personalized recommendations, try cached first, then search
+            if (artistsToShow.length === 0) {
+                isPersonalized = false;
+                
+                // Use cached if available and not expired
+                if (cached && cached.items && cached.items.length > 0) {
+                    artistsToShow = cached.items;
                 } else {
-                    artistsContainer.innerHTML = createPlaceholder(
-                        'Listen to more music to get artist recommendations.'
-                    );
+                    // Search for popular artists
+                    const fallbackQueries = ['pop artists', 'top artists 2024', 'popular artists', 'trending music'];
+                    const randomQuery = fallbackQueries[Math.floor(Math.random() * fallbackQueries.length)];
+                    try {
+                        const searchResult = await this.api.searchArtists(randomQuery, { limit: 15 });
+                        if (searchResult && searchResult.items) {
+                            artistsToShow = searchResult.items;
+                        }
+                    } catch (searchError) {
+                        console.warn('Fallback artist search failed:', searchError);
+                    }
                 }
-            } catch (e) {
-                console.error(e);
+            }
+
+            if (artistsToShow.length > 0) {
+                // Check if different from cache before saving
+                if (!recommendationsCache.isSameAs('artists', artistsToShow)) {
+                    recommendationsCache.save('artists', artistsToShow, isPersonalized);
+                }
+                
+                // Render the artists with indicator if not personalized
+                this._renderArtistCards(artistsContainer, artistsToShow.slice(0, 12), !isPersonalized);
+            } else {
+                artistsContainer.innerHTML = createPlaceholder('Unable to load artists. Try again later.');
+            }
+        } catch (e) {
+            console.error(e);
+            // If we have cached content, keep showing it
+            if (!cached || !cached.items || cached.items.length === 0) {
                 artistsContainer.innerHTML = createPlaceholder('Failed to load artist recommendations.');
             }
         }
+    }
+    
+    /**
+     * Helper to render artist cards with optional trending indicator
+     */
+    _renderArtistCards(container, artists, showTrendingIndicator = false) {
+        container.innerHTML = artists
+            .map((a) => {
+                const html = this.createArtistCardHTML(a);
+                if (showTrendingIndicator) {
+                    // Add trending badge to the card
+                    return html.replace('class="card"', 'class="card trending-item"');
+                }
+                return html;
+            })
+            .join('');
+        
+        artists.forEach((a) => {
+            const el = container.querySelector(`[data-artist-id="${a.id}"]`);
+            if (el) {
+                trackDataStore.set(el, a);
+                this.updateLikeState(el, 'artist', a.id);
+            }
+        });
     }
 
     renderHomeRecent() {

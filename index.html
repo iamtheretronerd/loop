@@ -1555,51 +1555,156 @@
                         </div>
 
                         <div class="settings-panel" data-panel="import" id="takeout-import-manager">
-                            <h2 class="settings-panel-title">Import from YouTube Music</h2>
+                            <h2 class="settings-panel-title">Import Library</h2>
+                            
+                            <!-- YouTube Music Import -->
                             <div class="settings-group">
-                                <p class="settings-section-desc">
-                                    Import your liked songs, playlists, and history using Google Takeout.
-                                </p>
-
-                                <details class="import-help">
-                                    <summary>How to get your data</summary>
-                                    <ol>
-                                        <li>Go to <a href="https://takeout.google.com/" target="_blank" rel="noopener">takeout.google.com</a></li>
-                                        <li>Click "Deselect all", then select only "YouTube and YouTube Music"</li>
-                                        <li>Click "All YouTube data included" and select: history, music-library-songs, playlists</li>
-                                        <li>Export as .zip, download and extract</li>
-                                    </ol>
-                                </details>
-
-                                <div class="import-controls">
-                                    <div class="import-file-row">
-                                        <input type="file" id="takeout-file-input" accept=".json,.html,.csv" multiple hidden />
-                                        <button id="takeout-select-files-btn" class="settings-btn">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                            Select Files
-                                        </button>
-                                        <span id="takeout-files-selected" class="import-file-info"></span>
+                                <div class="settings-item column">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">YouTube Music</span>
+                                        <span class="settings-item-desc">Import using Google Takeout</span>
                                     </div>
+                                </div>
+                                
+                                <div class="settings-item column" style="border-top: none; padding-top: 0;">
+                                    <details class="import-help">
+                                        <summary>How to get your data</summary>
+                                        <ol>
+                                            <li>Go to <a href="https://takeout.google.com/" target="_blank" rel="noopener">takeout.google.com</a></li>
+                                            <li>Click "Deselect all", then select only "YouTube and YouTube Music"</li>
+                                            <li>Click "All YouTube data included" and select: history, music-library-songs, playlists</li>
+                                            <li>Export as .zip, download and extract</li>
+                                        </ol>
+                                    </details>
 
-                                    <div class="import-options">
-                                        <label><input type="checkbox" id="takeout-import-history" checked /> History</label>
-                                        <label><input type="checkbox" id="takeout-import-likes" checked /> Liked Songs</label>
-                                        <label><input type="checkbox" id="takeout-import-playlists" checked /> Playlists</label>
-                                    </div>
-
-                                    <div class="import-actions">
-                                        <button id="takeout-start-import-btn" class="settings-btn primary" disabled>Start Import</button>
-                                        <span id="takeout-import-status" class="import-status"></span>
-                                    </div>
-
-                                    <div id="takeout-progress-container" class="import-progress" style="display: none;">
-                                        <div class="import-progress-bar">
-                                            <div class="import-progress-fill" id="takeout-progress-fill"></div>
+                                    <div class="import-controls">
+                                        <div class="import-file-row">
+                                            <input type="file" id="takeout-file-input" accept=".json,.html,.csv" multiple hidden />
+                                            <button id="takeout-select-files-btn" class="settings-btn">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                Select Files
+                                            </button>
+                                            <span id="takeout-files-selected" class="import-file-info"></span>
                                         </div>
-                                        <span id="takeout-progress-text" class="import-progress-text"></span>
-                                    </div>
 
-                                    <div id="takeout-results" class="import-results" style="display: none;"></div>
+                                        <div class="import-options">
+                                            <label><input type="checkbox" id="takeout-import-history" checked /> History</label>
+                                            <label><input type="checkbox" id="takeout-import-likes" checked /> Liked Songs</label>
+                                            <label><input type="checkbox" id="takeout-import-playlists" checked /> Playlists</label>
+                                        </div>
+
+                                        <div class="import-actions">
+                                            <button id="takeout-start-import-btn" class="settings-btn primary" disabled>Start Import</button>
+                                            <span id="takeout-import-status" class="import-status"></span>
+                                        </div>
+
+                                        <div id="takeout-progress-container" class="import-progress" style="display: none;">
+                                            <div class="import-progress-bar">
+                                                <div class="import-progress-fill" id="takeout-progress-fill"></div>
+                                            </div>
+                                            <span id="takeout-progress-text" class="import-progress-text"></span>
+                                        </div>
+
+                                        <div id="takeout-results" class="import-results" style="display: none;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Spotify Import -->
+                            <div class="settings-group" style="margin-top: 1rem;">
+                                <div class="settings-item column">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Spotify</span>
+                                        <span class="settings-item-desc">Import playlists using Exportify</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="settings-item column" style="border-top: none; padding-top: 0;">
+                                    <details class="import-help">
+                                        <summary>How to export from Spotify</summary>
+                                        <ol>
+                                            <li>Go to <a href="https://exportify.net/" target="_blank" rel="noopener">exportify.net</a> (free third-party tool)</li>
+                                            <li>Log in with your Spotify account</li>
+                                            <li>Click "Export" next to each playlist, or "Export All"</li>
+                                            <li>CSV files are downloaded with columns: Track Name, Artist Name(s), Album Name</li>
+                                            <li>Select the downloaded CSV files below</li>
+                                        </ol>
+                                        <p style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--muted-foreground);">💡 Each CSV file becomes a separate playlist</p>
+                                    </details>
+
+                                    <div class="import-controls">
+                                        <div class="import-file-row">
+                                            <input type="file" id="spotify-file-input" accept=".csv" multiple hidden />
+                                            <button id="spotify-select-files-btn" class="settings-btn">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                Select CSV Files
+                                            </button>
+                                            <span id="spotify-files-selected" class="import-file-info"></span>
+                                        </div>
+
+                                        <div class="import-actions">
+                                            <button id="spotify-start-import-btn" class="settings-btn primary" disabled>Import Playlists</button>
+                                            <span id="spotify-import-status" class="import-status"></span>
+                                        </div>
+
+                                        <div id="spotify-progress-container" class="import-progress" style="display: none;">
+                                            <div class="import-progress-bar">
+                                                <div class="import-progress-fill" id="spotify-progress-fill"></div>
+                                            </div>
+                                            <span id="spotify-progress-text" class="import-progress-text"></span>
+                                        </div>
+
+                                        <div id="spotify-results" class="import-results" style="display: none;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Apple Music Import -->
+                            <div class="settings-group" style="margin-top: 1rem;">
+                                <div class="settings-item column">
+                                    <div class="settings-item-info">
+                                        <span class="settings-item-label">Apple Music</span>
+                                        <span class="settings-item-desc">Import from Apple Music Library export</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="settings-item column" style="border-top: none; padding-top: 0;">
+                                    <details class="import-help">
+                                        <summary>How to export from Apple Music</summary>
+                                        <ol>
+                                            <li>Open the <strong>Music</strong> app on your Mac</li>
+                                            <li>Select a playlist in the sidebar</li>
+                                            <li>Go to <strong>File → Library → Export Playlist...</strong></li>
+                                            <li>Choose <strong>Plain Text</strong> or <strong>XML</strong> format</li>
+                                            <li>For full library: <strong>File → Library → Export Library...</strong></li>
+                                        </ol>
+                                        <p style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--muted-foreground);">💡 Plain Text exports as tab-separated values (TSV). XML exports your entire library.</p>
+                                    </details>
+
+                                    <div class="import-controls">
+                                        <div class="import-file-row">
+                                            <input type="file" id="apple-file-input" accept=".csv,.xml,.txt" multiple hidden />
+                                            <button id="apple-select-files-btn" class="settings-btn">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                Select Files
+                                            </button>
+                                            <span id="apple-files-selected" class="import-file-info"></span>
+                                        </div>
+
+                                        <div class="import-actions">
+                                            <button id="apple-start-import-btn" class="settings-btn primary" disabled>Import Library</button>
+                                            <span id="apple-import-status" class="import-status"></span>
+                                        </div>
+
+                                        <div id="apple-progress-container" class="import-progress" style="display: none;">
+                                            <div class="import-progress-bar">
+                                                <div class="import-progress-fill" id="apple-progress-fill"></div>
+                                            </div>
+                                            <span id="apple-progress-text" class="import-progress-text"></span>
+                                        </div>
+
+                                        <div id="apple-results" class="import-results" style="display: none;"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

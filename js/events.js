@@ -876,9 +876,10 @@ export function initializeTrackInteractions(player, api, mainContent, contextMen
             
             if (!parentList) {
                 // Handle orphaned track items (e.g. results not in a list container)
+                // Enable autoqueue (radio mode) for single track plays
                 const track = trackDataStore.get(trackItem);
                 if (track) {
-                     player.setQueue([track], 0);
+                     player.setQueue([track], 0, true); // Enable autoqueue
                      document.getElementById('shuffle-btn').classList.remove('active', 'smart');
                      player.playTrackFromQueue();
                 }

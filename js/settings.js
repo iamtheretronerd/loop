@@ -532,19 +532,28 @@ export function initializeSettings(scrobbler, player, api, ui) {
         if (!button) return;
 
         const li = button.closest('li');
+        if (!li || li.classList.contains('group-header')) return;
+        
         const index = parseInt(li.dataset.index, 10);
-        const type = li.dataset.type || 'api'; // Default to api if not present
+        const type = li.dataset.type || 'api';
+
+        if (isNaN(index)) return;
 
         const instances = await api.settings.getInstances(type);
+        let changed = false;
 
         if (button.classList.contains('move-up') && index > 0) {
             [instances[index], instances[index - 1]] = [instances[index - 1], instances[index]];
+            changed = true;
         } else if (button.classList.contains('move-down') && index < instances.length - 1) {
             [instances[index], instances[index + 1]] = [instances[index + 1], instances[index]];
+            changed = true;
         }
 
-        api.settings.saveInstances(instances, type);
-        ui.renderApiSettings();
+        if (changed) {
+            api.settings.saveInstances(instances, type);
+            ui.renderApiSettings();
+        }
     });
 
     document.getElementById('clear-cache-btn')?.addEventListener('click', async () => {

@@ -816,4 +816,373 @@ export function initializeTakeoutImport(api) {
         
         resultsContainer.innerHTML = html;
     }
+    
+    // Initialize Spotify Import
+    initializeSpotifyImport(api);
+    
+    // Initialize Apple Music Import
+    initializeAppleMusicImport(api);
+}
+
+/**
+ * Initialize Spotify Import UI
+ */
+function initializeSpotifyImport(api) {
+    const fileInput = document.getElementById('spotify-file-input');
+    const selectBtn = document.getElementById('spotify-select-files-btn');
+    const filesSelectedText = document.getElementById('spotify-files-selected');
+    const startBtn = document.getElementById('spotify-start-import-btn');
+    const statusText = document.getElementById('spotify-import-status');
+    const progressContainer = document.getElementById('spotify-progress-container');
+    const progressFill = document.getElementById('spotify-progress-fill');
+    const progressText = document.getElementById('spotify-progress-text');
+    const resultsContainer = document.getElementById('spotify-results');
+    
+    if (!selectBtn || !fileInput) return;
+    
+    let importer = new TakeoutImporter(api);
+    
+    selectBtn.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', () => {
+        const files = fileInput.files;
+        if (files.length > 0) {
+            filesSelectedText.textContent = `${files.length} file(s) selected`;
+            startBtn.disabled = false;
+            importer.setFiles(files);
+            resultsContainer.style.display = 'none';
+        } else {
+            filesSelectedText.textContent = '';
+            startBtn.disabled = true;
+        }
+    });
+    
+    startBtn.addEventListener('click', async () => {
+        startBtn.disabled = true;
+        selectBtn.disabled = true;
+        progressContainer.style.display = 'block';
+        resultsContainer.style.display = 'none';
+        statusText.textContent = 'Importing...';
+        
+        importer.onProgress = (data) => {
+            progressFill.style.width = `${data.progress}%`;
+            progressText.textContent = `Importing playlist "${data.playlistName || 'Spotify'}": ${data.current}/${data.total}`;
+        };
+        
+        try {
+            const results = { playlists: [] };
+            
+            for (const file of importer.files) {
+                const content = await importer.readFile(file);
+                // Spotify CSV has: Track Name, Artist Name(s), Album Name, etc.
+                const playlists = await parseSpotifyCSV(importer, content, file.name);
+                
+                for (const playlist of playlists) {
+                    const playlistResult = await importer.importPlaylist(playlist);
+                    results.playlists.push(playlistResult);
+                }
+            }
+            
+            progressContainer.style.display = 'none';
+            displaySpotifyResults(results, resultsContainer);
+            statusText.textContent = 'Import complete!';
+            selectBtn.disabled = false;
+        } catch (error) {
+            console.error('Spotify import failed:', error);
+            statusText.textContent = 'Import failed: ' + error.message;
+            progressContainer.style.display = 'none';
+            selectBtn.disabled = false;
+        }
+    });
+}
+
+/**
+ * Parse Spotify CSV export
+ */
+async function parseSpotifyCSV(importer, content, filename) {
+    const playlists = [];
+    const rows = importer.parseCSV(content);
+    
+    // Extract playlist name from filename
+    let playlistName = filename.replace('.csv', '').replace(/^.*[\\\/]/, '');
+    
+    const playlistData = {
+        name: playlistName,
+        description: 'Imported from Spotify',
+        videos: []
+    };
+    
+    for (const row of rows) {
+        // Spotify CSV columns: Track Name, Artist Name(s), Album Name, Track URI, etc.
+        const title = row['Track Name'] || row['Song Name'] || row['Name'] || row[0];
+        const artist = row['Artist Name(s)'] || row['Artist'] || row[1];
+        
+        if (title && title !== 'Track Name' && title !== 'Song Name') {
+            playlistData.videos.push({
+                title: title.trim(),
+                artist: artist ? artist.trim() : ''
+            });
+        }
+    }
+    
+    if (playlistData.videos.length > 0) {
+        playlists.push(playlistData);
+    }
+    
+    return playlists;
+}
+
+function displaySpotifyResults(results, container) {
+    container.style.display = 'block';
+    
+    let html = '<h4 style="margin-bottom: 0.5rem;">Import Results</h4>';
+    
+    if (results.playlists.length > 0) {
+        html += `<ul style="margin-left: 1rem;">`;
+        for (const playlist of results.playlists) {
+            html += `<li>🎵 ${playlist.name}: ${playlist.imported}/${playlist.total} tracks imported</li>`;
+        }
+        html += `</ul>`;
+    } else {
+        html += `<p>No playlists found in the selected files.</p>`;
+    }
+    
+    container.innerHTML = html;
+}
+
+/**
+ * Initialize Apple Music Import UI
+ */
+function initializeAppleMusicImport(api) {
+    const fileInput = document.getElementById('apple-file-input');
+    const selectBtn = document.getElementById('apple-select-files-btn');
+    const filesSelectedText = document.getElementById('apple-files-selected');
+    const startBtn = document.getElementById('apple-start-import-btn');
+    const statusText = document.getElementById('apple-import-status');
+    const progressContainer = document.getElementById('apple-progress-container');
+    const progressFill = document.getElementById('apple-progress-fill');
+    const progressText = document.getElementById('apple-progress-text');
+    const resultsContainer = document.getElementById('apple-results');
+    
+    if (!selectBtn || !fileInput) return;
+    
+    let importer = new TakeoutImporter(api);
+    
+    selectBtn.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', () => {
+        const files = fileInput.files;
+        if (files.length > 0) {
+            filesSelectedText.textContent = `${files.length} file(s) selected`;
+            startBtn.disabled = false;
+            importer.setFiles(files);
+            resultsContainer.style.display = 'none';
+        } else {
+            filesSelectedText.textContent = '';
+            startBtn.disabled = true;
+        }
+    });
+    
+    startBtn.addEventListener('click', async () => {
+        startBtn.disabled = true;
+        selectBtn.disabled = true;
+        progressContainer.style.display = 'block';
+        resultsContainer.style.display = 'none';
+        statusText.textContent = 'Importing...';
+        
+        importer.onProgress = (data) => {
+            progressFill.style.width = `${data.progress}%`;
+            progressText.textContent = `Importing: ${data.current}/${data.total}`;
+        };
+        
+        try {
+            const results = { likes: null, playlists: [] };
+            
+            for (const file of importer.files) {
+                const content = await importer.readFile(file);
+                const filename = file.name.toLowerCase();
+                
+                if (filename.endsWith('.xml')) {
+                    // Apple Music XML Library format
+                    const items = await parseAppleMusicXML(content);
+                    if (items.length > 0) {
+                        results.likes = await importer.importItems(items, 'likes');
+                    }
+                } else if (filename.endsWith('.csv') || filename.endsWith('.txt')) {
+                    // CSV/TSV format
+                    const playlists = await parseAppleMusicCSV(importer, content, file.name);
+                    for (const playlist of playlists) {
+                        const playlistResult = await importer.importPlaylist(playlist);
+                        results.playlists.push(playlistResult);
+                    }
+                }
+            }
+            
+            progressContainer.style.display = 'none';
+            displayAppleResults(results, resultsContainer);
+            statusText.textContent = 'Import complete!';
+            selectBtn.disabled = false;
+        } catch (error) {
+            console.error('Apple Music import failed:', error);
+            statusText.textContent = 'Import failed: ' + error.message;
+            progressContainer.style.display = 'none';
+            selectBtn.disabled = false;
+        }
+    });
+}
+
+/**
+ * Parse Apple Music XML Library (iTunes Library.xml format)
+ */
+async function parseAppleMusicXML(content) {
+    const items = [];
+    
+    try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(content, 'text/xml');
+        
+        // Apple Music/iTunes Library.xml is a plist format
+        // Structure: plist > dict > dict (key:Tracks) > dict > dict (each track)
+        const rootDict = doc.querySelector('plist > dict');
+        if (!rootDict) {
+            console.warn('Not a valid iTunes/Apple Music plist format');
+            return items;
+        }
+        
+        // Find the "Tracks" dict
+        const keys = rootDict.querySelectorAll(':scope > key');
+        let tracksDict = null;
+        
+        for (const key of keys) {
+            if (key.textContent === 'Tracks') {
+                tracksDict = key.nextElementSibling;
+                break;
+            }
+        }
+        
+        if (!tracksDict || tracksDict.tagName !== 'dict') {
+            console.warn('Could not find Tracks dictionary in plist');
+            return items;
+        }
+        
+        // Parse each track in the Tracks dict
+        const trackKeys = tracksDict.querySelectorAll(':scope > key');
+        
+        for (const trackKey of trackKeys) {
+            const trackDict = trackKey.nextElementSibling;
+            if (!trackDict || trackDict.tagName !== 'dict') continue;
+            
+            const trackData = {};
+            const propKeys = trackDict.querySelectorAll(':scope > key');
+            
+            for (const propKey of propKeys) {
+                const value = propKey.nextElementSibling;
+                if (value && (value.tagName === 'string' || value.tagName === 'integer')) {
+                    trackData[propKey.textContent] = value.textContent;
+                }
+            }
+            
+            // Only add if we have Name and Artist
+            if (trackData['Name'] && trackData['Artist']) {
+                items.push({
+                    title: trackData['Name'],
+                    artist: trackData['Artist'],
+                    album: trackData['Album'] || ''
+                });
+            }
+        }
+        
+        console.log(`[Apple Music Import] Parsed ${items.length} tracks from XML`);
+    } catch (error) {
+        console.error('Failed to parse Apple Music XML:', error);
+    }
+    
+    return items;
+}
+
+/**
+ * Parse Apple Music CSV/TSV export
+ * Apple Music "Plain Text" exports are actually TSV (tab-separated)
+ */
+async function parseAppleMusicCSV(importer, content, filename) {
+    const playlists = [];
+    
+    // Detect if it's TSV (tab-separated) or CSV (comma-separated)
+    const firstLine = content.split(/\r?\n/)[0] || '';
+    const isTSV = firstLine.includes('\t') && !firstLine.includes(',');
+    
+    let rows;
+    if (isTSV) {
+        // Parse TSV manually
+        rows = [];
+        const lines = content.split(/\r?\n/);
+        if (lines.length > 0) {
+            const headers = lines[0].split('\t').map(h => h.trim());
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const values = line.split('\t');
+                const row = {};
+                for (let j = 0; j < headers.length; j++) {
+                    row[headers[j]] = values[j] || '';
+                    row[j] = values[j] || '';
+                }
+                rows.push(row);
+            }
+        }
+    } else {
+        rows = importer.parseCSV(content);
+    }
+    
+    let playlistName = filename.replace(/\.(csv|txt)$/i, '').replace(/^.*[\\\/]/, '');
+    
+    const playlistData = {
+        name: playlistName,
+        description: 'Imported from Apple Music',
+        videos: []
+    };
+    
+    for (const row of rows) {
+        // Apple Music exports columns: Name, Artist, Composer, Album, Grouping, etc.
+        const title = row['Name'] || row['Song'] || row['Title'] || row[0];
+        const artist = row['Artist'] || row[1];
+        
+        if (title && title !== 'Name' && title !== 'Song' && title !== 'Title') {
+            playlistData.videos.push({
+                title: title.trim(),
+                artist: artist ? artist.trim() : ''
+            });
+        }
+    }
+    
+    if (playlistData.videos.length > 0) {
+        playlists.push(playlistData);
+        console.log(`[Apple Music Import] Parsed ${playlistData.videos.length} tracks from ${filename}`);
+    }
+    
+    return playlists;
+}
+
+function displayAppleResults(results, container) {
+    container.style.display = 'block';
+    
+    let html = '<h4 style="margin-bottom: 0.5rem;">Import Results</h4>';
+    
+    if (results.likes) {
+        html += `<p>🎵 Library: ${results.likes.imported} imported, ${results.likes.failed} not found</p>`;
+    }
+    
+    if (results.playlists.length > 0) {
+        html += `<ul style="margin-left: 1rem;">`;
+        for (const playlist of results.playlists) {
+            html += `<li>📁 ${playlist.name}: ${playlist.imported}/${playlist.total} tracks imported</li>`;
+        }
+        html += `</ul>`;
+    }
+    
+    if (!results.likes && results.playlists.length === 0) {
+        html += `<p>No data found in the selected files.</p>`;
+    }
+    
+    container.innerHTML = html;
 }

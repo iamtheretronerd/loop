@@ -640,6 +640,103 @@ export const queueManager = {
     },
 };
 
+/**
+ * Recommendations Cache Manager
+ * Caches recommended albums/artists to localStorage to show previous recommendations quickly
+ */
+export const recommendationsCache = {
+    STORAGE_KEY: 'loop-recommendations-cache',
+    CACHE_DURATION: 1000 * 60 * 60 * 24, // 24 hours
+
+    _getCache() {
+        try {
+            const data = localStorage.getItem(this.STORAGE_KEY);
+            return data ? JSON.parse(data) : {};
+        } catch {
+            return {};
+        }
+    },
+
+    _saveCache(cache) {
+        try {
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(cache));
+        } catch (e) {
+            console.warn('Failed to save recommendations cache:', e);
+        }
+    },
+
+    /**
+     * Get cached recommendations for a type (albums, artists)
+     * Returns { items: [], timestamp: number, isPersonalized: boolean } or null
+     */
+    get(type) {
+        const cache = this._getCache();
+        const entry = cache[type];
+        
+        if (!entry) return null;
+        
+        // Check if cache is still valid
+        if (Date.now() - entry.timestamp > this.CACHE_DURATION) {
+            return null;
+        }
+        
+        return entry;
+    },
+
+    /**
+     * Save recommendations to cache
+     * @param {string} type - 'albums' or 'artists'
+     * @param {Array} items - Array of album/artist objects
+     * @param {boolean} isPersonalized - Whether these are personalized recommendations
+     */
+    save(type, items, isPersonalized = true) {
+        if (!items || items.length === 0) return;
+        
+        const cache = this._getCache();
+        const existingEntry = cache[type];
+        
+        // Check if recommendations have actually changed
+        if (existingEntry && existingEntry.items) {
+            const existingIds = new Set(existingEntry.items.map(i => i.id));
+            const newIds = items.map(i => i.id);
+            const sameCount = newIds.filter(id => existingIds.has(id)).length;
+            
+            // If more than 70% of items are the same, don't update
+            if (sameCount >= items.length * 0.7) {
+                console.log(`[RecommendationsCache] ${type}: Same as cached, not updating`);
+                return false;
+            }
+        }
+        
+        cache[type] = {
+            items: items.slice(0, 20), // Limit cached items
+            timestamp: Date.now(),
+            isPersonalized
+        };
+        
+        this._saveCache(cache);
+        console.log(`[RecommendationsCache] ${type}: Saved ${items.length} items (personalized: ${isPersonalized})`);
+        return true;
+    },
+
+    /**
+     * Check if the cached items are the same as new items
+     */
+    isSameAs(type, newItems) {
+        const cached = this.get(type);
+        if (!cached || !cached.items) return false;
+        
+        const cachedIds = new Set(cached.items.map(i => i.id));
+        const sameCount = newItems.filter(i => cachedIds.has(i.id)).length;
+        
+        return sameCount >= newItems.length * 0.7;
+    },
+
+    clear() {
+        localStorage.removeItem(this.STORAGE_KEY);
+    }
+};
+
 // System theme listener
 if (typeof window !== 'undefined' && window.matchMedia) {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {

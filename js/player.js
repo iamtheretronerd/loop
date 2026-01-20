@@ -33,6 +33,11 @@ export class Player {
         this.currentRgValues = null;
         this.userVolume = parseFloat(localStorage.getItem('volume') || '0.7');
 
+        // Autoqueue (Radio) mode - fills queue with recommendations when playing single track
+        this.autoqueueEnabled = false;
+        this.autoqueueLoading = false;
+        this.autoqueueSeeds = []; // Tracks used as seeds for recommendations
+
         // Sleep timer properties
         this.sleepTimer = null;
         this.sleepTimerEndTime = null;
@@ -108,6 +113,8 @@ export class Player {
             this.shuffleActive = savedState.shuffleActive || false;
             this.smartShuffleActive = savedState.smartShuffleActive || false;
             this.repeatMode = savedState.repeatMode || REPEAT_MODE.OFF;
+            this.autoqueueEnabled = savedState.autoqueueEnabled || false;
+            this.autoqueueSeeds = savedState.autoqueueSeeds || [];
 
             // Restore current track if queue exists and index is valid
             const currentQueue = this.shuffleActive ? this.shuffledQueue : this.queue;
@@ -162,6 +169,8 @@ export class Player {
             shuffleActive: this.shuffleActive,
             smartShuffleActive: this.smartShuffleActive,
             repeatMode: this.repeatMode,
+            autoqueueEnabled: this.autoqueueEnabled,
+            autoqueueSeeds: this.autoqueueSeeds,
         });
     }
 
@@ -365,6 +374,7 @@ export class Player {
     playNext() {
         const currentQueue = this.shuffleActive ? this.shuffledQueue : this.queue;
         const isLastTrack = this.currentQueueIndex >= currentQueue.length - 1;
+        const isNearEnd = this.currentQueueIndex >= currentQueue.length - 3;
 
         if (this.repeatMode === REPEAT_MODE.ONE) {
             this.audio.currentTime = 0;
@@ -372,10 +382,18 @@ export class Player {
             return;
         }
 
+        // If autoqueue is enabled and we're near the end, fetch more recommendations
+        if (this.autoqueueEnabled && isNearEnd && !this.autoqueueLoading) {
+            this.fetchAutoqueueRecommendations();
+        }
+
         if (!isLastTrack) {
             this.currentQueueIndex++;
         } else if (this.repeatMode === REPEAT_MODE.ALL) {
             this.currentQueueIndex = 0;
+        } else if (this.autoqueueEnabled) {
+            // In autoqueue mode, wait for more tracks or stay on last
+            return;
         } else {
             return;
         }
@@ -569,13 +587,117 @@ export class Player {
         return this.repeatMode;
     }
 
-    setQueue(tracks, startIndex = 0) {
+    setQueue(tracks, startIndex = 0, autoqueue = false) {
         this.queue = tracks;
         this.currentQueueIndex = startIndex;
         this.shuffleActive = false;
         this.smartShuffleActive = false;
+        this.autoqueueEnabled = autoqueue;
+        this.autoqueueLoading = false;
+        this.autoqueueSeeds = autoqueue && tracks.length > 0 ? [tracks[0]] : [];
         this.preloadCache.clear();
         this.saveQueueState();
+
+        // If autoqueue is enabled with a single track, start fetching recommendations
+        if (autoqueue && tracks.length === 1) {
+            this.fetchAutoqueueRecommendations();
+        }
+    }
+
+    /**
+     * Fetches recommendations for autoqueue (radio) mode
+     * Uses current track, history, and likes as seeds
+     */
+    async fetchAutoqueueRecommendations() {
+        if (this.autoqueueLoading || !this.autoqueueEnabled) return;
+        
+        this.autoqueueLoading = true;
+        console.log('[Autoqueue] Fetching recommendations...');
+        
+        try {
+            // Build seed tracks from current track, history, and likes
+            const seedTracks = [];
+            
+            // Add current track as primary seed
+            if (this.currentTrack) {
+                seedTracks.push(this.currentTrack);
+            }
+            
+            // Add saved autoqueue seeds
+            for (const seed of this.autoqueueSeeds) {
+                if (!seedTracks.some(t => t.id === seed.id)) {
+                    seedTracks.push(seed);
+                }
+            }
+            
+            // Get recent history for additional context
+            try {
+                const history = await db.getHistory();
+                const recentHistory = history.slice(0, 5);
+                for (const item of recentHistory) {
+                    if (!seedTracks.some(t => t.id === item.id)) {
+                        seedTracks.push(item);
+                    }
+                }
+            } catch (e) {
+                console.warn('[Autoqueue] Could not get history:', e);
+            }
+            
+            // Get some liked tracks for variety
+            try {
+                const likes = await db.getFavorites('track');
+                // Get random liked tracks
+                const shuffledLikes = likes.sort(() => 0.5 - Math.random()).slice(0, 3);
+                for (const item of shuffledLikes) {
+                    if (!seedTracks.some(t => t.id === item.id)) {
+                        seedTracks.push(item);
+                    }
+                }
+            } catch (e) {
+                console.warn('[Autoqueue] Could not get likes:', e);
+            }
+            
+            console.log(`[Autoqueue] Using ${seedTracks.length} seed tracks`);
+            
+            // Get recommendations from API
+            const recommendations = await this.api.getRecommendedTracksForPlaylist(seedTracks, 15);
+            
+            if (!recommendations || recommendations.length === 0) {
+                console.warn('[Autoqueue] No recommendations received');
+                this.autoqueueLoading = false;
+                return;
+            }
+            
+            // Filter out tracks already in queue
+            const currentQueue = this.shuffleActive ? this.shuffledQueue : this.queue;
+            const existingIds = new Set(currentQueue.map(t => t.id));
+            
+            const newTracks = recommendations.filter(track => !existingIds.has(track.id));
+            
+            console.log(`[Autoqueue] Adding ${newTracks.length} new tracks to queue`);
+            
+            // Add new tracks to queue
+            for (const track of newTracks) {
+                track.isAutoqueue = true; // Flag for UI if needed
+                this.queue.push(track);
+            }
+            
+            // Update seeds with some of the new tracks for next fetch
+            if (newTracks.length > 0) {
+                this.autoqueueSeeds = [
+                    this.currentTrack,
+                    ...newTracks.slice(0, 3)
+                ].filter(Boolean);
+            }
+            
+            this.saveQueueState();
+            this.preloadNextTracks();
+            
+        } catch (error) {
+            console.error('[Autoqueue] Failed to fetch recommendations:', error);
+        } finally {
+            this.autoqueueLoading = false;
+        }
     }
 
     addToQueue(track) {
