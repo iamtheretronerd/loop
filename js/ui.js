@@ -771,7 +771,7 @@ export class UIRenderer {
         // Like button
         likeBtn?.addEventListener('click', async () => {
             if (this.fsCurrentTrack) {
-                const { db } = await import('./db.js');
+                const { db, trackDataStore } = await import('./db.js');
                 const { syncManager } = await import('./accounts/firestore.js');
                 const { showNotification } = await import('./downloads.js');
                 
@@ -806,6 +806,43 @@ export class UIRenderer {
                         }
                     }
                 });
+                
+                // Handle Library Page Update (sync with library view)
+                if (window.location.hash === '#library') {
+                    const itemSelector = `.track-item[data-track-id="${trackId}"]`;
+                    const itemEl = document.querySelector(itemSelector);
+                    
+                    if (!added && itemEl) {
+                        // Remove item from library view when unliked
+                        const container = itemEl.parentElement;
+                        itemEl.remove();
+                        if (container && container.children.length === 0) {
+                            container.innerHTML = '<div class="placeholder-text">No liked tracks yet.</div>';
+                        }
+                    } else if (added && !itemEl) {
+                        // Add item to library view when liked
+                        const tracksContainer = document.getElementById('library-tracks-container');
+                        if (tracksContainer) {
+                            // Remove placeholder if it exists
+                            const placeholder = tracksContainer.querySelector('.placeholder-text');
+                            if (placeholder) placeholder.remove();
+                            
+                            // Create track element
+                            const index = tracksContainer.children.length;
+                            const trackHTML = this.createTrackItemHTML(this.fsCurrentTrack, index, true, false);
+                            
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = trackHTML;
+                            const newEl = tempDiv.firstElementChild;
+                            
+                            if (newEl) {
+                                tracksContainer.appendChild(newEl);
+                                trackDataStore.set(newEl, this.fsCurrentTrack);
+                                this.updateLikeState(newEl, 'track', this.fsCurrentTrack.id);
+                            }
+                        }
+                    }
+                }
                 
                 showNotification(added ? `Added to Liked: ${this.fsCurrentTrack.title}` : `Removed from Liked: ${this.fsCurrentTrack.title}`);
             }
