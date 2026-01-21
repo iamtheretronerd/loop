@@ -197,7 +197,7 @@ The application connects to various music streaming APIs. For self-hosting setup
 
 ## License
 
-ISC License - see the repository license file for details.
+MIT License - see the repository license file for details.
 
 ## Acknowledgments
 

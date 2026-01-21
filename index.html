@@ -97,8 +97,9 @@
 
                     <div class="fs-controls">
                         <button id="fs-shuffle-btn" class="fs-btn fs-control-btn" title="Shuffle">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <!-- Two crossing arrows - simple shuffle icon -->
+                                <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
                             </svg>
                         </button>
                         <button id="fs-prev-btn" class="fs-btn fs-control-btn fs-control-main" title="Previous">
@@ -120,8 +121,22 @@
                             </svg>
                         </button>
                         <button id="fs-repeat-btn" class="fs-btn fs-control-btn" title="Repeat">
-                            <svg class="repeat-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="lucide lucide-repeat-icon lucide-repeat"
+                            >
+                                <path d="m17 2 4 4-4 4" />
+                                <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+                                <path d="m7 22-4-4 4-4" />
+                                <path d="M21 13v1a4 4 0 0 1-4 4H3" />
                             </svg>
                             <span class="repeat-one-indicator">1</span>
                         </button>
@@ -160,11 +175,26 @@
             <div class="fs-lyrics-panel" id="fs-lyrics-panel">
                 <div class="fs-lyrics-header">
                     <h3>Lyrics</h3>
-                    <button id="fs-lyrics-close-btn" class="fs-btn" title="Close">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                        </svg>
-                    </button>
+                    <div class="fs-lyrics-controls">
+                        <button id="fs-romaji-toggle-btn" class="fs-btn" title="Toggle Romaji (Japanese to Latin)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                        </button>
+                        <button id="fs-lyrics-download-btn" class="fs-btn" title="Download LRC">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </button>
+                        <button id="fs-lyrics-close-btn" class="fs-btn" title="Close">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div class="fs-lyrics-content" id="fs-lyrics-content">
                     <div class="fs-lyrics-loading">
@@ -1953,25 +1983,6 @@
                                 />
                             </svg>
                         </button>
-                        <button id="toggle-lyrics-btn" title="Lyrics" style="display: none">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="lucide lucide-mic"
-                            >
-                                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                                <line x1="12" y1="19" x2="12" y2="22" />
-                                <line x1="8" y1="22" x2="16" y2="22" />
-                            </svg>
-                        </button>
                         <button id="download-current-btn" title="Download current track" class="desktop-only">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -1987,24 +1998,6 @@
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="7 10 12 15 17 10"></polyline>
                                 <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                        </button>
-                        <button id="cast-btn" title="Cast">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path d="M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path>
-                                <path d="M2 12a9 9 0 0 1 9 9"></path>
-                                <path d="M2 17a5 5 0 0 1 5 5"></path>
-                                <path d="M2 22h.01"></path>
                             </svg>
                         </button>
 
@@ -2038,27 +2031,6 @@
                             >
                                 <circle cx="12" cy="12" r="10" />
                                 <polyline points="12,6 12,12 16,14" />
-                            </svg>
-                        </button>
-                        <button id="queue-btn" title="Queue">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="lucide lucide-list-icon lucide-list"
-                            >
-                                <path d="M3 5h.01" />
-                                <path d="M3 12h.01" />
-                                <path d="M3 19h.01" />
-                                <path d="M8 5h13" />
-                                <path d="M8 12h13" />
-                                <path d="M8 19h13" />
                             </svg>
                         </button>
                     </div>

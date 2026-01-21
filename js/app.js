@@ -28,79 +28,6 @@ import { readTrackMetadata } from './metadata.js';
 import { initializeGestures } from './gestures.js';
 import { createGlassSurface, injectGlassSurfaceStyles } from './glass-surface.js';
 
-function initializeCasting(audioPlayer, castBtn) {
-    if (!castBtn) return;
-
-    if ('remote' in audioPlayer) {
-        audioPlayer.remote
-            .watchAvailability((available) => {
-                if (available) {
-                    castBtn.style.display = 'flex';
-                    castBtn.classList.add('available');
-                }
-            })
-            .catch((err) => {
-                console.log('Remote playback not available:', err);
-                if (window.innerWidth > 768) {
-                    castBtn.style.display = 'flex';
-                }
-            });
-
-        castBtn.addEventListener('click', () => {
-            if (!audioPlayer.src) {
-                alert('Please play a track first to enable casting.');
-                return;
-            }
-            audioPlayer.remote.prompt().catch((err) => {
-                if (err.name === 'NotAllowedError') return;
-                if (err.name === 'NotFoundError') {
-                    alert('No remote playback devices (Chromecast/AirPlay) were found on your network.');
-                    return;
-                }
-                console.log('Cast prompt error:', err);
-            });
-        });
-
-        audioPlayer.addEventListener('playing', () => {
-            if (audioPlayer.remote && audioPlayer.remote.state === 'connected') {
-                castBtn.classList.add('connected');
-            }
-        });
-
-        audioPlayer.addEventListener('pause', () => {
-            if (audioPlayer.remote && audioPlayer.remote.state === 'disconnected') {
-                castBtn.classList.remove('connected');
-            }
-        });
-    } else if (audioPlayer.webkitShowPlaybackTargetPicker) {
-        castBtn.style.display = 'flex';
-        castBtn.classList.add('available');
-
-        castBtn.addEventListener('click', () => {
-            audioPlayer.webkitShowPlaybackTargetPicker();
-        });
-
-        audioPlayer.addEventListener('webkitplaybacktargetavailabilitychanged', (e) => {
-            if (e.availability === 'available') {
-                castBtn.classList.add('available');
-            }
-        });
-
-        audioPlayer.addEventListener('webkitcurrentplaybacktargetiswirelesschanged', () => {
-            if (audioPlayer.webkitCurrentPlaybackTargetIsWireless) {
-                castBtn.classList.add('connected');
-            } else {
-                castBtn.classList.remove('connected');
-            }
-        });
-    } else if (window.innerWidth > 768) {
-        castBtn.style.display = 'flex';
-        castBtn.addEventListener('click', () => {
-            alert('Casting is not supported in this browser. Try Chrome for Chromecast or Safari for AirPlay.');
-        });
-    }
-}
-
 function initializeKeyboardShortcuts(player, audioPlayer) {
     document.addEventListener('keydown', (e) => {
         if (e.target.matches('input, textarea')) return;
@@ -142,7 +69,7 @@ function initializeKeyboardShortcuts(player, audioPlayer) {
                 document.getElementById('repeat-btn')?.click();
                 break;
             case 'q':
-                document.getElementById('queue-btn')?.click();
+                document.getElementById('fs-queue-btn')?.click();
                 break;
             case '/':
                 e.preventDefault();
@@ -275,8 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    const castBtn = document.getElementById('cast-btn');
-    initializeCasting(audioPlayer, castBtn);
+
 
     // Restore UI state for the current track (like button, theme)
     if (player.currentTrack) {
@@ -332,23 +258,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('nav-forward')?.addEventListener('click', () => {
         window.history.forward();
-    });
-
-    document.getElementById('toggle-lyrics-btn')?.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        if (!player.currentTrack) {
-            alert('No track is currently playing');
-            return;
-        }
-
-        const isActive = sidePanelManager.isActive('lyrics');
-
-        if (isActive) {
-            sidePanelManager.close();
-            clearLyricsPanelSync(audioPlayer, sidePanelManager.panel);
-        } else {
-            openLyricsPanel(player.currentTrack, audioPlayer, lyricsManager);
-        }
     });
 
     document.getElementById('download-current-btn')?.addEventListener('click', () => {

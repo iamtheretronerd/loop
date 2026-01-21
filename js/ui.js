@@ -967,7 +967,7 @@ export class UIRenderer {
 
         if (!currentTrackContainer || !queueList) return;
 
-        const queue = this.fsPlayer.shuffleActive ? this.fsPlayer.shuffledQueue : this.fsPlayer.queue;
+        const queue = this.fsPlayer.getCurrentQueue();
         const currentIndex = this.fsPlayer.currentQueueIndex;
         const currentTrack = queue[currentIndex];
 
@@ -1047,6 +1047,8 @@ export class UIRenderer {
         const panel = document.getElementById('fs-lyrics-panel');
         const content = document.getElementById('fs-lyrics-content');
         const lyricsToggleBtn = document.getElementById('toggle-fullscreen-lyrics-btn');
+        const romajiBtn = document.getElementById('fs-romaji-toggle-btn');
+        const downloadBtn = document.getElementById('fs-lyrics-download-btn');
 
         if (!panel || !content) return;
 
@@ -1063,27 +1065,55 @@ export class UIRenderer {
         panel.classList.add('open');
         lyricsToggleBtn?.classList.add('active');
 
-        // Fetch lyrics
-        if (this.fsLyricsManager && this.fsCurrentTrack) {
+        // Use the full-featured lyrics component
+        if (this.fsLyricsManager && this.fsCurrentTrack && this.fsAudioPlayer) {
             try {
-                const lyricsData = await this.fsLyricsManager.fetchLyrics(this.fsCurrentTrack.id, this.fsCurrentTrack);
-
-                if (lyricsData && lyricsData.subtitles) {
-                    // Parse synced lyrics
-                    this.fsSyncedLyrics = this.fsLyricsManager.parseSyncedLyrics(lyricsData.subtitles);
-
-                    if (this.fsSyncedLyrics.length > 0) {
-                        this.renderSyncedLyrics();
-                        this.startLyricsSync();
-                    } else {
-                        // Plain lyrics fallback
-                        content.innerHTML = `<div class="fs-lyrics-plain">${escapeHtml(lyricsData.subtitles)}</div>`;
-                    }
-                } else {
-                    this.showLyricsUnavailable();
+                // Import the renderLyricsInFullscreen function
+                const { renderLyricsInFullscreen, clearFullscreenLyricsSync } = await import('./lyrics.js');
+                
+                // Clear any previous sync
+                if (content.lyricsCleanup) {
+                    content.lyricsCleanup();
+                }
+                
+                // Store lyrics data for download
+                this.fsLyricsData = await this.fsLyricsManager.fetchLyrics(this.fsCurrentTrack.id, this.fsCurrentTrack);
+                
+                // Render the full am-lyrics component
+                await renderLyricsInFullscreen(this.fsCurrentTrack, this.fsAudioPlayer, this.fsLyricsManager, content);
+                
+                // Update romaji button state
+                if (romajiBtn) {
+                    const isRomajiMode = this.fsLyricsManager.getRomajiMode();
+                    romajiBtn.style.color = isRomajiMode ? 'var(--highlight)' : '';
+                }
+                
+                // Setup romaji toggle handler
+                if (romajiBtn && !romajiBtn._hasClickHandler) {
+                    romajiBtn._hasClickHandler = true;
+                    romajiBtn.addEventListener('click', async () => {
+                        const amLyrics = content.querySelector('am-lyrics');
+                        if (amLyrics) {
+                            const newMode = await this.fsLyricsManager.toggleRomajiMode(amLyrics);
+                            romajiBtn.style.color = newMode ? 'var(--highlight)' : '';
+                        }
+                    });
+                }
+                
+                // Setup download handler
+                if (downloadBtn && !downloadBtn._hasClickHandler) {
+                    downloadBtn._hasClickHandler = true;
+                    downloadBtn.addEventListener('click', () => {
+                        if (this.fsLyricsData && this.fsCurrentTrack) {
+                            this.fsLyricsManager.downloadLRC(this.fsLyricsData, this.fsCurrentTrack);
+                        } else {
+                            const { showNotification } = import('./downloads.js');
+                            showNotification('No synced lyrics available to download');
+                        }
+                    });
                 }
             } catch (error) {
-                console.error('Error fetching lyrics:', error);
+                console.error('Error loading lyrics component:', error);
                 this.showLyricsUnavailable();
             }
         } else {
@@ -1093,6 +1123,7 @@ export class UIRenderer {
 
     closeFullscreenLyrics() {
         const panel = document.getElementById('fs-lyrics-panel');
+        const content = document.getElementById('fs-lyrics-content');
         const lyricsToggleBtn = document.getElementById('toggle-fullscreen-lyrics-btn');
 
         if (panel) {
@@ -1100,30 +1131,14 @@ export class UIRenderer {
         }
         lyricsToggleBtn?.classList.remove('active');
 
-        this.stopLyricsSync();
-    }
-
-    renderSyncedLyrics() {
-        const content = document.getElementById('fs-lyrics-content');
-        if (!content || !this.fsSyncedLyrics) return;
-
-        content.innerHTML = this.fsSyncedLyrics
-            .map((line, index) => `
-                <div class="fs-lyrics-line" data-index="${index}" data-time="${line.time}">
-                    ${escapeHtml(line.text)}
-                </div>
-            `)
-            .join('');
-
-        // Add click handlers for seeking
-        content.querySelectorAll('.fs-lyrics-line').forEach(line => {
-            line.addEventListener('click', () => {
-                const time = parseFloat(line.dataset.time);
-                if (this.fsAudioPlayer && !isNaN(time)) {
-                    this.fsAudioPlayer.currentTime = time;
-                }
-            });
-        });
+        // Clean up lyrics sync
+        if (content && content.lyricsCleanup) {
+            content.lyricsCleanup();
+            content.lyricsCleanup = null;
+        }
+        if (content && content.lyricsManager) {
+            content.lyricsManager.stopLyricsObserver();
+        }
     }
 
     showLyricsUnavailable() {
@@ -1138,60 +1153,6 @@ export class UIRenderer {
                 <p>Lyrics not available for this track</p>
             </div>
         `;
-    }
-
-    startLyricsSync() {
-        this.stopLyricsSync();
-
-        if (!this.fsAudioPlayer) return;
-
-        this.fsLyricsSyncHandler = () => {
-            this.updateLyricsHighlight();
-        };
-
-        this.fsAudioPlayer.addEventListener('timeupdate', this.fsLyricsSyncHandler);
-    }
-
-    stopLyricsSync() {
-        if (this.fsAudioPlayer && this.fsLyricsSyncHandler) {
-            this.fsAudioPlayer.removeEventListener('timeupdate', this.fsLyricsSyncHandler);
-            this.fsLyricsSyncHandler = null;
-        }
-    }
-
-    updateLyricsHighlight() {
-        if (!this.fsSyncedLyrics || !this.fsAudioPlayer) return;
-
-        const currentTime = this.fsAudioPlayer.currentTime;
-        const content = document.getElementById('fs-lyrics-content');
-        if (!content) return;
-
-        const lines = content.querySelectorAll('.fs-lyrics-line');
-        let activeIndex = -1;
-
-        // Find active line
-        for (let i = 0; i < this.fsSyncedLyrics.length; i++) {
-            if (currentTime >= this.fsSyncedLyrics[i].time) {
-                activeIndex = i;
-            } else {
-                break;
-            }
-        }
-
-        // Update classes
-        lines.forEach((line, index) => {
-            line.classList.remove('active', 'past');
-            if (index === activeIndex) {
-                line.classList.add('active');
-                // Scroll active line into view
-                if (this.fsLastActiveIndex !== activeIndex) {
-                    line.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    this.fsLastActiveIndex = activeIndex;
-                }
-            } else if (index < activeIndex) {
-                line.classList.add('past');
-            }
-        });
     }
 
     syncFullscreenState() {

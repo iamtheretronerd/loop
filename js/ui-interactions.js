@@ -344,7 +344,7 @@ export function initializeUIInteractions(player, api) {
         sidePanelManager.open('queue', 'Queue', renderQueueControls, renderQueueContent);
     };
 
-    queueBtn.addEventListener('click', openQueuePanel);
+    queueBtn?.addEventListener('click', openQueuePanel);
 
     // Expose renderQueue for external updates (e.g. shuffle, add to queue)
     window.renderQueueFunction = () => {

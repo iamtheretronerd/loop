@@ -59,11 +59,145 @@ export function initializeGestures(player) {
         mobileControls.addEventListener('touchend', handleTouchEnd, { passive: true });
     }
     
+    // Initialize fullscreen player gestures
+    initializeFullscreenGestures(player);
+    
     // Pull to refresh on main content
     initializePullToRefresh();
     
     // Long press for track items
     initializeLongPress();
+}
+
+// Fullscreen player touch gestures
+function initializeFullscreenGestures(player) {
+    const fullscreenOverlay = document.getElementById('fullscreen-cover-overlay');
+    if (!fullscreenOverlay) return;
+    
+    let startY = 0;
+    let startX = 0;
+    let currentY = 0;
+    let currentX = 0;
+    let isDragging = false;
+    const closeThreshold = 120; // Pixels to drag down before closing
+    const swipeThreshold = 80; // Pixels for track skip
+    
+    // Get the content area (where gestures should work, not on controls)
+    const getContentArea = () => fullscreenOverlay.querySelector('.fs-content');
+    const getArtwork = () => fullscreenOverlay.querySelector('.fs-artwork-container');
+    
+    fullscreenOverlay.addEventListener('touchstart', (e) => {
+        // Only handle gestures on the main content/artwork area, not on controls
+        const target = e.target;
+        const isControl = target.closest('.fs-controls') || 
+                         target.closest('.fs-extra-controls') || 
+                         target.closest('.fs-progress') ||
+                         target.closest('.fs-header') ||
+                         target.closest('.fs-queue-panel') ||
+                         target.closest('.fs-lyrics-panel') ||
+                         target.closest('button');
+        
+        if (isControl) return;
+        
+        startY = e.touches[0].clientY;
+        startX = e.touches[0].clientX;
+        currentY = startY;
+        currentX = startX;
+        isDragging = true;
+        
+        // Remove any transition during drag
+        fullscreenOverlay.style.transition = 'none';
+    }, { passive: true });
+    
+    fullscreenOverlay.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        
+        currentY = e.touches[0].clientY;
+        currentX = e.touches[0].clientX;
+        
+        const deltaY = currentY - startY;
+        const deltaX = currentX - startX;
+        
+        // Only apply visual feedback for downward swipes (positive deltaY)
+        if (deltaY > 0 && Math.abs(deltaY) > Math.abs(deltaX)) {
+            // Calculate progress (0 to 1)
+            const progress = Math.min(deltaY / closeThreshold, 1);
+            
+            // Apply transform and opacity
+            const translateY = Math.min(deltaY * 0.5, 100); // Max 100px translate
+            const scale = 1 - (progress * 0.05); // Scale down slightly
+            const opacity = 1 - (progress * 0.3); // Fade slightly
+            
+            fullscreenOverlay.style.transform = `translateY(${translateY}px) scale(${scale})`;
+            fullscreenOverlay.style.opacity = opacity;
+            fullscreenOverlay.style.borderRadius = `${progress * 20}px`;
+        }
+    }, { passive: true });
+    
+    fullscreenOverlay.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const deltaY = currentY - startY;
+        const deltaX = currentX - startX;
+        
+        // Restore transition
+        fullscreenOverlay.style.transition = 'transform 0.3s ease, opacity 0.3s ease, border-radius 0.3s ease';
+        
+        // Check for swipe down to close
+        if (deltaY > closeThreshold && Math.abs(deltaY) > Math.abs(deltaX) * 1.5) {
+            // Close the fullscreen player
+            closeFullscreen(fullscreenOverlay);
+            showGestureIndicator('↓ Minimized');
+            return;
+        }
+        
+        // Check for horizontal swipe (track skip) - only if not a vertical swipe
+        if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+            if (deltaX < 0) {
+                // Swipe left = Next track
+                player.next();
+                showGestureIndicator('→ Next');
+            } else {
+                // Swipe right = Previous track
+                player.previous();
+                showGestureIndicator('← Previous');
+            }
+        }
+        
+        // Reset visual state
+        resetFullscreenState(fullscreenOverlay);
+    }, { passive: true });
+    
+    // Also reset on touch cancel
+    fullscreenOverlay.addEventListener('touchcancel', () => {
+        isDragging = false;
+        resetFullscreenState(fullscreenOverlay);
+    }, { passive: true });
+}
+
+function closeFullscreen(overlay) {
+    // Animate out
+    overlay.style.transform = 'translateY(100%)';
+    overlay.style.opacity = '0';
+    
+    // After animation, hide and reset
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        resetFullscreenState(overlay);
+        
+        // Close any open panels
+        const lyricsPanel = overlay.querySelector('.fs-lyrics-panel');
+        const queuePanel = overlay.querySelector('.fs-queue-panel');
+        lyricsPanel?.classList.remove('open');
+        queuePanel?.classList.remove('open');
+    }, 300);
+}
+
+function resetFullscreenState(overlay) {
+    overlay.style.transform = '';
+    overlay.style.opacity = '';
+    overlay.style.borderRadius = '';
 }
 
 function showGestureIndicator(text) {

@@ -2841,6 +2841,12 @@ input:checked + .slider::before {
     color: var(--foreground);
 }
 
+.fs-lyrics-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
 .fs-lyrics-content {
     flex: 1;
     overflow-y: auto;
@@ -2848,6 +2854,12 @@ input:checked + .slider::before {
     display: flex;
     flex-direction: column;
     scroll-behavior: smooth;
+}
+
+.fs-lyrics-content am-lyrics {
+    flex: 1;
+    height: 100%;
+    width: 100%;
 }
 
 .fs-lyrics-loading {
