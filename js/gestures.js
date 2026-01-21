@@ -123,14 +123,14 @@ function initializeFullscreenGestures(player) {
             // Calculate progress (0 to 1)
             const progress = Math.min(deltaY / closeThreshold, 1);
             
-            // Apply transform and opacity
-            const translateY = Math.min(deltaY * 0.5, 100); // Max 100px translate
-            const scale = 1 - (progress * 0.05); // Scale down slightly
-            const opacity = 1 - (progress * 0.3); // Fade slightly
+            // Apply transform - scale from bottom, slide down
+            const translateY = Math.min(deltaY * 0.4, 80); // Slide down
+            const scaleY = 1 - (progress * 0.15); // Scale down vertically
+            const scaleX = 1 - (progress * 0.02); // Slight horizontal scale
             
-            fullscreenOverlay.style.transform = `translateY(${translateY}px) scale(${scale})`;
-            fullscreenOverlay.style.opacity = opacity;
-            fullscreenOverlay.style.borderRadius = `${progress * 20}px`;
+            fullscreenOverlay.style.transformOrigin = 'bottom center';
+            fullscreenOverlay.style.transform = `translateY(${translateY}px) scale(${scaleX}, ${scaleY})`;
+            fullscreenOverlay.style.borderRadius = `${progress * 24}px ${progress * 24}px 0 0`;
         }
     }, { passive: true });
     
@@ -177,27 +177,55 @@ function initializeFullscreenGestures(player) {
 }
 
 function closeFullscreen(overlay) {
-    // Animate out
-    overlay.style.transform = 'translateY(100%)';
-    overlay.style.opacity = '0';
+    const nowPlayingBar = document.querySelector('.now-playing-bar');
     
-    // After animation, hide and reset
-    setTimeout(() => {
-        overlay.style.display = 'none';
-        resetFullscreenState(overlay);
+    if (nowPlayingBar) {
+        // Get the now playing bar's position
+        const barRect = nowPlayingBar.getBoundingClientRect();
+        const overlayRect = overlay.getBoundingClientRect();
         
-        // Close any open panels
-        const lyricsPanel = overlay.querySelector('.fs-lyrics-panel');
-        const queuePanel = overlay.querySelector('.fs-queue-panel');
-        lyricsPanel?.classList.remove('open');
-        queuePanel?.classList.remove('open');
-    }, 300);
+        // Calculate the transform to morph into the bar
+        const scaleX = barRect.width / overlayRect.width;
+        const scaleY = barRect.height / overlayRect.height;
+        const translateY = barRect.top - overlayRect.top;
+        
+        // Apply morphing transition
+        overlay.style.transition = 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease, border-radius 0.35s ease';
+        overlay.style.transformOrigin = 'bottom center';
+        overlay.style.transform = `translateY(${translateY}px) scaleY(${scaleY})`;
+        overlay.style.opacity = '0';
+        overlay.style.borderRadius = '0';
+        
+        // After animation, hide and reset
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            resetFullscreenState(overlay);
+            
+            // Close any open panels
+            const lyricsPanel = overlay.querySelector('.fs-lyrics-panel');
+            const queuePanel = overlay.querySelector('.fs-queue-panel');
+            lyricsPanel?.classList.remove('open');
+            queuePanel?.classList.remove('open');
+        }, 350);
+    } else {
+        // Fallback: simple slide down
+        overlay.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        overlay.style.transform = 'translateY(100%)';
+        overlay.style.opacity = '0';
+        
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            resetFullscreenState(overlay);
+        }, 300);
+    }
 }
 
 function resetFullscreenState(overlay) {
     overlay.style.transform = '';
     overlay.style.opacity = '';
     overlay.style.borderRadius = '';
+    overlay.style.transformOrigin = '';
+    overlay.style.transition = '';
 }
 
 function showGestureIndicator(text) {
