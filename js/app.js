@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     themeManager.setTheme(currentTheme);
     trackListSettings.getMode();
 
-    // Apply fixed accent color if set
+    // Apply fixed accent color 
     if (!accentColorSettings.isDynamic()) {
         accentColorSettings.applyAccentColor(accentColorSettings.getColor());
     }
